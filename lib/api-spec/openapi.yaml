@@ -406,6 +406,44 @@ components:
           enum: [new, researched, ready, contacted, replied, interested, won, lost]
         saved: { type: boolean }
         contactVerified: { type: boolean }
+        fit:
+          type: string
+          enum: ["HIGH RELEVANCE", "POSSIBLE RELEVANCE", "LOW RELEVANCE"]
+        scoreBreakdown:
+          type: object
+          properties:
+            baseScore: { type: integer }
+            totalScore: { type: integer }
+            fit:
+              type: string
+              enum: ["HIGH RELEVANCE", "POSSIBLE RELEVANCE", "LOW RELEVANCE"]
+            factors:
+              type: array
+              items:
+                type: object
+                properties:
+                  factor: { type: string }
+                  points: { type: integer }
+                  reason: { type: string }
+        observableSignals:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              category: { type: string }
+              key: { type: string }
+              statement: { type: string }
+              sourceUrl: { type: string }
+              sourceName: { type: string }
+              observedAt: { type: string }
+              confidence:
+                type: string
+                enum: [high, medium, low]
+              type:
+                type: string
+                enum: [VERIFIED, INFERRED, SUGGESTED]
+              excerpt: { type: string }
     LeadUpdate:
       type: object
       properties:
@@ -423,6 +461,13 @@ components:
         sourceUrl: { type: ["string", "null"] }
         sourceStatus: { type: string, enum: [demo, connected, not_verified] }
         observedAt: { type: string }
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        type:
+          type: string
+          enum: [VERIFIED, INFERRED, SUGGESTED]
+        excerpt: { type: string }
     Outreach:
       type: object
       required: [id, leadId, companyName, channel, subject, message, whyThisMessage, status, createdAt, canSend]

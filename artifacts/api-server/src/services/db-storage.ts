@@ -82,6 +82,9 @@ export async function saveLiveLeads(leads: Lead[]): Promise<void> {
             status: lead.status,
             saved: lead.saved,
             contactVerified: lead.contactVerified,
+            fit: lead.fit ?? null,
+            scoreBreakdown: lead.scoreBreakdown ?? null,
+            observableSignals: lead.observableSignals ?? null,
           })
           .onConflictDoUpdate({
             target: leadsTable.id,
@@ -92,6 +95,9 @@ export async function saveLiveLeads(leads: Lead[]): Promise<void> {
               signals: lead.signals,
               evidence: lead.evidence,
               opportunity: lead.opportunity,
+              fit: lead.fit ?? null,
+              scoreBreakdown: lead.scoreBreakdown ?? null,
+              observableSignals: lead.observableSignals ?? null,
             },
           });
       }
@@ -139,6 +145,9 @@ export async function getLiveLeadsForRadar(
           status: row.status as Lead["status"],
           saved: row.saved,
           contactVerified: row.contactVerified,
+          fit: (row.fit as Lead["fit"]) ?? undefined,
+          scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
+          observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
         }))
         .filter((lead) => {
           if (!query) return true;
@@ -199,6 +208,9 @@ export async function getAllLiveLeads(search?: string): Promise<Lead[]> {
           status: row.status as Lead["status"],
           saved: row.saved,
           contactVerified: row.contactVerified,
+          fit: (row.fit as Lead["fit"]) ?? undefined,
+          scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
+          observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
         }))
         .filter((lead) => {
           if (!query) return true;
@@ -259,6 +271,9 @@ export async function getLiveLeadById(leadId: string): Promise<Lead | null> {
           status: row.status as Lead["status"],
           saved: row.saved,
           contactVerified: row.contactVerified,
+          fit: (row.fit as Lead["fit"]) ?? undefined,
+          scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
+          observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
         };
       }
     } catch (err) {

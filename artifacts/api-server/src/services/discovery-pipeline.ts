@@ -3,10 +3,12 @@ import {
   CandidateCompany,
   Evidence,
   ProviderError,
+  QualificationProvider,
   ResearchProvider,
   ScrapedPage,
   SearchProvider,
 } from "./providers";
+import { qualifyCandidate } from "./intelligence";
 import { saveLiveLeads, saveLiveRadar } from "./db-storage";
 import { logger } from "../lib/logger";
 
@@ -154,14 +156,14 @@ export interface DiscoveryRunResult {
 export interface DiscoveryPipelineOptions {
   searchProvider: SearchProvider;
   researchProvider: ResearchProvider;
+  qualificationProvider?: QualificationProvider;
   maxCandidates?: number;
   maxResearch?: number;
 }
 
 /**
- * Executes Phase 2.1 Live Discovery Pipeline:
- * Search → Normalize → Deduplicate → Scrape/Research → Structured results → Persistence.
- * Does NOT perform LLM qualification (reserved for Phase 2.2).
+ * Executes Phase 2.2 Live Discovery Pipeline:
+ * Search → Normalize → Deduplicate → Scrape/Research → Observable Signals → Evidence-backed Qualification → Opportunity Hypotheses → Persistence.
  */
 export async function runDiscoveryPipeline(
   radar: Radar,
@@ -209,36 +211,24 @@ export async function runDiscoveryPipeline(
     }
   }
 
-  // 5. Transform researched candidates into structured real Lead records
+  // 5. Transform researched candidates into qualified, evidence-backed Lead records
+  const qualificationProvider =
+    options.qualificationProvider ?? {
+      qualify: async (c, p, r) => qualifyCandidate(c, p, r),
+    };
+
   const now = new Date().toISOString();
-  const leads: Lead[] = researchResults.map(({ candidate, page }, index) => {
+  const leads: Lead[] = [];
+
+  for (let index = 0; index < researchResults.length; index++) {
+    const { candidate, page } = researchResults[index];
     const leadId = `lead-live-${radar.id}-${Date.now()}-${index + 1}`;
 
-    const evidenceItems: Evidence[] = [
-      {
-        id: `${leadId}-e1`,
-        statement: `Official website publicly accessible at ${candidate.url}`,
-        sourceName: page.title || candidate.name,
-        sourceUrl: candidate.url,
-        sourceStatus: "connected",
-        observedAt: page.scrapedAt || now,
-        type: "VERIFIED",
-        confidence: "high",
-      },
-    ];
-
-    if (page.title) {
-      evidenceItems.push({
-        id: `${leadId}-e2`,
-        statement: `Public site title: "${page.title}"`,
-        sourceName: candidate.name,
-        sourceUrl: candidate.url,
-        sourceStatus: "connected",
-        observedAt: page.scrapedAt || now,
-        type: "VERIFIED",
-        confidence: "high",
-      });
-    }
+    const qualification = await qualificationProvider.qualify(candidate, page, {
+      target: radar.target,
+      offer: radar.offer,
+      criteria: radar.criteria,
+    });
 
     const lead: Lead = {
       id: leadId,
@@ -255,17 +245,13 @@ export async function runDiscoveryPipeline(
       location: "Verified web domain",
       founder: null,
       publicEmail: null,
-      relevance: 80, // Baseline for researched candidate; LLM scoring in Phase 2.2
-      signals: [
-        `Discovered from live search: "${radar.target}"`,
-        `Official domain verified: ${candidate.domain}`,
-        page.title ? `Site title: "${page.title}"` : "Active web presence",
-      ],
-      evidence: evidenceItems,
-      opportunity: [
-        radar.offer,
-        "Active online brand with verified public domain",
-      ],
+      relevance: qualification.relevanceScore, // RADAR_RELEVANCE_SCORE
+      fit: qualification.fit,
+      scoreBreakdown: qualification.scoreBreakdown,
+      observableSignals: qualification.signals,
+      signals: qualification.signals.map((s) => s.statement),
+      evidence: qualification.evidence,
+      opportunity: qualification.opportunities,
       source: "Firecrawl Live Discovery",
       sourceStatus: "connected",
       discoveredAt: now,
@@ -274,8 +260,11 @@ export async function runDiscoveryPipeline(
       contactVerified: false,
     };
 
-    return lead;
-  });
+    leads.push(lead);
+  }
+
+  // Sort leads by relevance score descending
+  leads.sort((a, b) => b.relevance - a.relevance);
 
   // 6. Persist real results
   if (leads.length > 0) {

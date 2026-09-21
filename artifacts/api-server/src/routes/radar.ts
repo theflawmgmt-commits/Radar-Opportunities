@@ -132,6 +132,8 @@ router.post("/radars/:radarId", async (req, res) => {
             "Searching live web…",
             "Deduplicating candidates…",
             "Researching websites…",
+            "Extracting observable signals…",
+            "Evaluating qualification & score…",
             "Saving verified opportunities…",
           ],
           leadsFound: result.leadsFound,

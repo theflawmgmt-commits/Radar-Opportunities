@@ -5,7 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EvidenceConfidence } from './evidenceConfidence';
 import type { EvidenceSourceStatus } from './evidenceSourceStatus';
+import type { EvidenceType } from './evidenceType';
 
 export interface Evidence {
   id: string;
@@ -15,4 +17,7 @@ export interface Evidence {
   sourceUrl?: string | null;
   sourceStatus: EvidenceSourceStatus;
   observedAt: string;
+  confidence?: EvidenceConfidence;
+  type?: EvidenceType;
+  excerpt?: string;
 }

@@ -166,7 +166,10 @@ export const ListLeadsResponseItem = zod.object({
   "sourceName": zod.string(),
   "sourceUrl": zod.string().nullish(),
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
-  "observedAt": zod.string()
+  "observedAt": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
 })),
   "opportunity": zod.array(zod.string()),
   "source": zod.string(),
@@ -175,7 +178,30 @@ export const ListLeadsResponseItem = zod.object({
   "radarId": zod.string(),
   "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
   "saved": zod.boolean(),
-  "contactVerified": zod.boolean().optional()
+  "contactVerified": zod.boolean().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "scoreBreakdown": zod.object({
+  "baseScore": zod.number().int().optional(),
+  "totalScore": zod.number().int().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "factors": zod.array(zod.object({
+  "factor": zod.string().optional(),
+  "points": zod.number().int().optional(),
+  "reason": zod.string().optional()
+})).optional()
+}).optional(),
+  "observableSignals": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "category": zod.string().optional(),
+  "key": zod.string().optional(),
+  "statement": zod.string().optional(),
+  "sourceUrl": zod.string().optional(),
+  "sourceName": zod.string().optional(),
+  "observedAt": zod.string().optional(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
+})).optional()
 })
 export const ListLeadsResponse = zod.array(ListLeadsResponseItem)
 
@@ -211,7 +237,10 @@ export const GetLeadResponse = zod.object({
   "sourceName": zod.string(),
   "sourceUrl": zod.string().nullish(),
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
-  "observedAt": zod.string()
+  "observedAt": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
 })),
   "opportunity": zod.array(zod.string()),
   "source": zod.string(),
@@ -220,7 +249,30 @@ export const GetLeadResponse = zod.object({
   "radarId": zod.string(),
   "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
   "saved": zod.boolean(),
-  "contactVerified": zod.boolean().optional()
+  "contactVerified": zod.boolean().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "scoreBreakdown": zod.object({
+  "baseScore": zod.number().int().optional(),
+  "totalScore": zod.number().int().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "factors": zod.array(zod.object({
+  "factor": zod.string().optional(),
+  "points": zod.number().int().optional(),
+  "reason": zod.string().optional()
+})).optional()
+}).optional(),
+  "observableSignals": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "category": zod.string().optional(),
+  "key": zod.string().optional(),
+  "statement": zod.string().optional(),
+  "sourceUrl": zod.string().optional(),
+  "sourceName": zod.string().optional(),
+  "observedAt": zod.string().optional(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
+})).optional()
 })
 
 
@@ -260,7 +312,10 @@ export const UpdateLeadResponse = zod.object({
   "sourceName": zod.string(),
   "sourceUrl": zod.string().nullish(),
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
-  "observedAt": zod.string()
+  "observedAt": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
 })),
   "opportunity": zod.array(zod.string()),
   "source": zod.string(),
@@ -269,7 +324,30 @@ export const UpdateLeadResponse = zod.object({
   "radarId": zod.string(),
   "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
   "saved": zod.boolean(),
-  "contactVerified": zod.boolean().optional()
+  "contactVerified": zod.boolean().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "scoreBreakdown": zod.object({
+  "baseScore": zod.number().int().optional(),
+  "totalScore": zod.number().int().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "factors": zod.array(zod.object({
+  "factor": zod.string().optional(),
+  "points": zod.number().int().optional(),
+  "reason": zod.string().optional()
+})).optional()
+}).optional(),
+  "observableSignals": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "category": zod.string().optional(),
+  "key": zod.string().optional(),
+  "statement": zod.string().optional(),
+  "sourceUrl": zod.string().optional(),
+  "sourceName": zod.string().optional(),
+  "observedAt": zod.string().optional(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
+})).optional()
 })
 
 
@@ -370,7 +448,10 @@ export const GetPipelineResponse = zod.object({
   "sourceName": zod.string(),
   "sourceUrl": zod.string().nullish(),
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
-  "observedAt": zod.string()
+  "observedAt": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
 })),
   "opportunity": zod.array(zod.string()),
   "source": zod.string(),
@@ -379,7 +460,30 @@ export const GetPipelineResponse = zod.object({
   "radarId": zod.string(),
   "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
   "saved": zod.boolean(),
-  "contactVerified": zod.boolean().optional()
+  "contactVerified": zod.boolean().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "scoreBreakdown": zod.object({
+  "baseScore": zod.number().int().optional(),
+  "totalScore": zod.number().int().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "factors": zod.array(zod.object({
+  "factor": zod.string().optional(),
+  "points": zod.number().int().optional(),
+  "reason": zod.string().optional()
+})).optional()
+}).optional(),
+  "observableSignals": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "category": zod.string().optional(),
+  "key": zod.string().optional(),
+  "statement": zod.string().optional(),
+  "sourceUrl": zod.string().optional(),
+  "sourceName": zod.string().optional(),
+  "observedAt": zod.string().optional(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
+})).optional()
 })))
 })
 
@@ -419,7 +523,10 @@ export const UpdatePipelineStageResponse = zod.object({
   "sourceName": zod.string(),
   "sourceUrl": zod.string().nullish(),
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
-  "observedAt": zod.string()
+  "observedAt": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
 })),
   "opportunity": zod.array(zod.string()),
   "source": zod.string(),
@@ -428,7 +535,30 @@ export const UpdatePipelineStageResponse = zod.object({
   "radarId": zod.string(),
   "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
   "saved": zod.boolean(),
-  "contactVerified": zod.boolean().optional()
+  "contactVerified": zod.boolean().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "scoreBreakdown": zod.object({
+  "baseScore": zod.number().int().optional(),
+  "totalScore": zod.number().int().optional(),
+  "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
+  "factors": zod.array(zod.object({
+  "factor": zod.string().optional(),
+  "points": zod.number().int().optional(),
+  "reason": zod.string().optional()
+})).optional()
+}).optional(),
+  "observableSignals": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "category": zod.string().optional(),
+  "key": zod.string().optional(),
+  "statement": zod.string().optional(),
+  "sourceUrl": zod.string().optional(),
+  "sourceName": zod.string().optional(),
+  "observedAt": zod.string().optional(),
+  "confidence": zod.enum(['high', 'medium', 'low']).optional(),
+  "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
+  "excerpt": zod.string().optional()
+})).optional()
 })
 
 

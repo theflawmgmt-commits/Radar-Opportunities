@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Evidence } from './evidence';
+import type { LeadFit } from './leadFit';
+import type { LeadObservableSignalsItem } from './leadObservableSignalsItem';
+import type { LeadScoreBreakdown } from './leadScoreBreakdown';
 import type { LeadSourceStatus } from './leadSourceStatus';
 import type { LeadStatus } from './leadStatus';
 
@@ -40,4 +43,7 @@ export interface Lead {
   status: LeadStatus;
   saved: boolean;
   contactVerified?: boolean;
+  fit?: LeadFit;
+  scoreBreakdown?: LeadScoreBreakdown;
+  observableSignals?: LeadObservableSignalsItem[];
 }

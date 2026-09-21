@@ -11,7 +11,10 @@ const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 async function runTests() {
   const testOutDir = path.resolve(artifactDir, "dist/test");
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/__tests__/pipeline.test.ts")],
+    entryPoints: [
+      path.resolve(artifactDir, "src/__tests__/pipeline.test.ts"),
+      path.resolve(artifactDir, "src/__tests__/intelligence.test.ts"),
+    ],
     platform: "node",
     bundle: true,
     format: "esm",
@@ -36,8 +39,11 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     },
   });
 
-  const testFile = path.resolve(testOutDir, "pipeline.test.mjs");
-  const child = spawn(process.execPath, ["--test", testFile], {
+  const testFiles = [
+    path.resolve(testOutDir, "pipeline.test.mjs"),
+    path.resolve(testOutDir, "intelligence.test.mjs"),
+  ];
+  const child = spawn(process.execPath, ["--test", ...testFiles], {
     stdio: "inherit",
     cwd: artifactDir,
   });

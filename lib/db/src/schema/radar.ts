@@ -36,6 +36,9 @@ export const leadsTable = pgTable("leads", {
   status: text("status").notNull().default("new"),
   saved: boolean("saved").notNull().default(false),
   contactVerified: boolean("contact_verified").notNull().default(false),
+  fit: text("fit"),
+  scoreBreakdown: jsonb("score_breakdown").$type<unknown>(),
+  observableSignals: jsonb("observable_signals").$type<unknown[]>(),
 });
 
 export const outreachTable = pgTable("outreach", {

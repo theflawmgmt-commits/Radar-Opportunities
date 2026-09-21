@@ -1,6 +1,7 @@
 export type ConfidenceLevel = "high" | "medium" | "low";
 export type EvidenceType = "VERIFIED" | "INFERRED" | "SUGGESTED";
 export type EvidenceSourceStatus = "demo" | "connected" | "not_verified";
+export type FitLevel = "HIGH RELEVANCE" | "POSSIBLE RELEVANCE" | "LOW RELEVANCE";
 
 export interface CandidateCompany {
   name: string;
@@ -27,14 +28,26 @@ export interface ScrapedPage {
   scrapedAt: string;
 }
 
+export type SignalCategory =
+  | "ecommerce"
+  | "content"
+  | "social"
+  | "hiring"
+  | "branding"
+  | "technology"
+  | "absence";
+
 export interface ObservableSignal {
   id: string;
+  category: SignalCategory;
+  key: string;
   statement: string;
   sourceUrl: string;
   sourceName: string;
   observedAt: string;
   confidence: ConfidenceLevel;
   type: EvidenceType;
+  excerpt?: string;
 }
 
 export interface Evidence {
@@ -46,11 +59,26 @@ export interface Evidence {
   observedAt: string;
   confidence?: ConfidenceLevel;
   type?: EvidenceType;
+  excerpt?: string;
+}
+
+export interface ScoreFactor {
+  factor: string;
+  points: number;
+  reason: string;
+}
+
+export interface ScoreBreakdown {
+  baseScore: number;
+  totalScore: number; // RADAR_RELEVANCE_SCORE (0 - 100 heuristic)
+  fit: FitLevel;
+  factors: ScoreFactor[];
 }
 
 export interface QualificationResult {
-  fit: "GOOD FIT" | "POSSIBLE FIT" | "NOT A FIT";
-  relevanceScore: number;
+  fit: FitLevel;
+  relevanceScore: number; // RADAR_RELEVANCE_SCORE
+  scoreBreakdown: ScoreBreakdown;
   reasons: string[];
   signals: ObservableSignal[];
   evidence: Evidence[];
@@ -108,8 +136,11 @@ export interface QualificationProvider {
   qualify(
     candidate: CandidateCompany,
     page: ScrapedPage,
-    criteria: string[],
-    offer: string,
+    radar: {
+      target: string;
+      offer: string;
+      criteria: string[];
+    },
   ): Promise<QualificationResult>;
 }
 

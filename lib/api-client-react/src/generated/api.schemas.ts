@@ -99,6 +99,68 @@ export const LeadStatus = {
   lost: 'lost',
 } as const;
 
+export type LeadFit = typeof LeadFit[keyof typeof LeadFit];
+
+
+export const LeadFit = {
+  HIGH_RELEVANCE: 'HIGH RELEVANCE',
+  POSSIBLE_RELEVANCE: 'POSSIBLE RELEVANCE',
+  LOW_RELEVANCE: 'LOW RELEVANCE',
+} as const;
+
+export type LeadScoreBreakdownFit = typeof LeadScoreBreakdownFit[keyof typeof LeadScoreBreakdownFit];
+
+
+export const LeadScoreBreakdownFit = {
+  HIGH_RELEVANCE: 'HIGH RELEVANCE',
+  POSSIBLE_RELEVANCE: 'POSSIBLE RELEVANCE',
+  LOW_RELEVANCE: 'LOW RELEVANCE',
+} as const;
+
+export type LeadScoreBreakdownFactorsItem = {
+  factor?: string;
+  points?: number;
+  reason?: string;
+};
+
+export type LeadScoreBreakdown = {
+  baseScore?: number;
+  totalScore?: number;
+  fit?: LeadScoreBreakdownFit;
+  factors?: LeadScoreBreakdownFactorsItem[];
+};
+
+export type LeadObservableSignalsItemConfidence = typeof LeadObservableSignalsItemConfidence[keyof typeof LeadObservableSignalsItemConfidence];
+
+
+export const LeadObservableSignalsItemConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type LeadObservableSignalsItemType = typeof LeadObservableSignalsItemType[keyof typeof LeadObservableSignalsItemType];
+
+
+export const LeadObservableSignalsItemType = {
+  VERIFIED: 'VERIFIED',
+  INFERRED: 'INFERRED',
+  SUGGESTED: 'SUGGESTED',
+} as const;
+
+export type LeadObservableSignalsItem = {
+  id?: string;
+  category?: string;
+  key?: string;
+  statement?: string;
+  sourceUrl?: string;
+  sourceName?: string;
+  observedAt?: string;
+  confidence?: LeadObservableSignalsItemConfidence;
+  type?: LeadObservableSignalsItemType;
+  excerpt?: string;
+};
+
 export type EvidenceSourceStatus = typeof EvidenceSourceStatus[keyof typeof EvidenceSourceStatus];
 
 
@@ -106,6 +168,24 @@ export const EvidenceSourceStatus = {
   demo: 'demo',
   connected: 'connected',
   not_verified: 'not_verified',
+} as const;
+
+export type EvidenceConfidence = typeof EvidenceConfidence[keyof typeof EvidenceConfidence];
+
+
+export const EvidenceConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type EvidenceType = typeof EvidenceType[keyof typeof EvidenceType];
+
+
+export const EvidenceType = {
+  VERIFIED: 'VERIFIED',
+  INFERRED: 'INFERRED',
+  SUGGESTED: 'SUGGESTED',
 } as const;
 
 export interface Evidence {
@@ -116,6 +196,9 @@ export interface Evidence {
   sourceUrl?: string | null;
   sourceStatus: EvidenceSourceStatus;
   observedAt: string;
+  confidence?: EvidenceConfidence;
+  type?: EvidenceType;
+  excerpt?: string;
 }
 
 export interface Lead {
@@ -149,6 +232,9 @@ export interface Lead {
   status: LeadStatus;
   saved: boolean;
   contactVerified?: boolean;
+  fit?: LeadFit;
+  scoreBreakdown?: LeadScoreBreakdown;
+  observableSignals?: LeadObservableSignalsItem[];
 }
 
 export type LeadUpdateStatus = typeof LeadUpdateStatus[keyof typeof LeadUpdateStatus];
