@@ -1,0 +1,644 @@
+RADAR MVP IS ALREADY BUILT AND RUNNING.
+
+Do NOT rebuild the application.
+Do NOT redesign the existing UI.
+Do NOT replace the current database.
+Do NOT remove demo mode.
+Do NOT introduce fake lead data.
+
+We are now moving RADAR from DEMO MODE toward its first real-data capability.
+
+==================================================
+GOAL
+====
+
+Build RADAR's first real lead-discovery pipeline.
+
+The first milestone is:
+
+A user can create a Radar such as:
+
+“Find Indian consumer brands that could benefit from UGC.”
+
+RADAR should search real publicly available web information, identify real companies, research them, qualify them against the Radar criteria, collect supporting evidence, and return real lead records.
+
+The system must NEVER fabricate companies, people, emails, URLs, social accounts, events, or evidence.
+
+==================================================
+IMPORTANT: PRESERVE THE CURRENT MVP
+===================================
+
+Keep all existing functionality:
+
+* Home
+* Create Radar
+* Discover
+* Lead Detail
+* Outreach
+* Pipeline
+* Saved Radars
+* Settings
+* Demo Mode
+* PostgreSQL schema
+* OpenAPI contract
+* Generated client hooks
+* Existing provider interfaces
+* Existing responsive UI
+
+Demo Mode must continue working exactly as it does.
+
+Add:
+
+DEMO MODE | LIVE MODE
+
+Live Mode should use real providers.
+
+If providers are unavailable or API keys are missing, show a clear error/state instead of silently falling back to fictional data.
+
+==================================================
+ARCHITECTURE
+============
+
+Use the existing provider abstraction.
+
+Do NOT hardcode one provider throughout the application.
+
+Create/complete provider interfaces similar to:
+
+SearchProvider
+ResearchProvider
+EnrichmentProvider
+VerificationProvider
+
+The application should depend on these interfaces rather than directly depending on a specific vendor.
+
+This will allow providers to be replaced later.
+
+==================================================
+PHASE 2 PIPELINE
+================
+
+Implement this pipeline:
+
+USER RADAR
+↓
+INTENT PARSING
+↓
+SEARCH
+↓
+CANDIDATE COLLECTION
+↓
+DEDUPLICATION
+↓
+WEB RESEARCH
+↓
+SIGNAL EXTRACTION
+↓
+QUALIFICATION
+↓
+EVIDENCE COLLECTION
+↓
+LEAD CREATION
+↓
+RESULTS
+
+Each stage should have a clear service/module.
+
+Do not put the entire workflow inside one huge API route.
+
+==================================================
+
+1. RADAR QUERY INTERPRETATION
+   ==================================================
+
+When the user creates a Radar, convert the natural-language request into structured criteria.
+
+Example:
+
+User:
+
+“Find Indian brands that could benefit from UGC.”
+
+Structured representation:
+
+Target:
+Consumer brands
+
+Location:
+India
+
+Potential offer:
+UGC
+
+Signals:
+
+* active online presence
+* product suitable for visual demonstration
+* active social presence
+* recent product/activity signals
+* limited creator-style content
+
+Keep the original natural-language query as well.
+
+The user should be able to see/edit the interpreted criteria before running the Radar.
+
+==================================================
+2. SEARCH PROVIDER
+==================
+
+Connect a real web/search provider.
+
+Use environment variables for credentials.
+
+Do NOT expose API keys to the frontend.
+
+Create a provider adapter.
+
+Conceptually:
+
+searchCandidates(criteria)
+
+returns normalized candidate records:
+
+* name
+* url
+* snippet
+* source
+* discoveredAt
+
+Do not assume search results are companies.
+
+The next stage must verify/research candidates.
+
+If a provider cannot be configured yet, keep the provider interface and provide a clear configuration error.
+
+Do NOT generate fake search results.
+
+==================================================
+3. CANDIDATE NORMALIZATION
+==========================
+
+Normalize search results.
+
+Deduplicate candidates using:
+
+* canonical URL
+* domain
+* normalized company name
+
+Do not create multiple leads for the same company simply because it appeared in several search results.
+
+==================================================
+4. WEB RESEARCH
+===============
+
+For each candidate, research publicly available web information.
+
+Create a ResearchProvider.
+
+The research layer should attempt to determine:
+
+* company name
+* official website
+* description
+* industry
+* location
+* products/services
+* publicly visible social profiles
+* recent publicly observable activity
+* relevant business signals
+
+Use a web-crawling/research provider where appropriate.
+
+Do not crawl private or authenticated areas.
+
+Respect provider/platform terms and applicable laws.
+
+==================================================
+5. SIGNAL EXTRACTION
+====================
+
+Extract observable signals.
+
+Examples:
+
+Website exists
+Active social presence
+Recent product launch
+Recently updated website
+Hiring
+New location
+New service
+Press/news mention
+Strong product visual potential
+Limited creator-style content
+
+Each signal must have:
+
+* statement
+* source URL
+* source name
+* observed date/time where available
+* confidence/status
+
+Never turn an inference into a fact.
+
+For example:
+
+FACT:
+“Company published a new product page.”
+
+INFERENCE:
+“This may create an opportunity for product-focused UGC.”
+
+The UI should distinguish these.
+
+==================================================
+6. QUALIFICATION
+================
+
+RADAR should determine whether a candidate actually matches the user's Radar.
+
+Do NOT use an arbitrary black-box score alone.
+
+Instead produce:
+
+MATCH
+
+GOOD FIT
+POSSIBLE FIT
+NOT A FIT
+
+And explain why.
+
+Example:
+
+GOOD FIT
+
+Why:
+
+* Indian consumer brand
+* Active online presence
+* Recent product activity
+* Product is suitable for visual demonstration
+* Limited creator-style content detected
+
+The qualification decision must be based on collected evidence.
+
+==================================================
+7. EVIDENCE
+===========
+
+Every important lead claim should have evidence.
+
+Store:
+
+Evidence:
+
+* leadId
+* type
+* statement
+* sourceUrl
+* sourceName
+* observedAt
+* confidence
+
+Examples:
+
+“Company launched Product X.”
+
+Source:
+official company website
+
+or:
+
+“Company posted about Product X.”
+
+Source:
+public company page
+
+Do not cite search results as if they were the original source when the original source is available.
+
+==================================================
+8. REAL LEAD RECORD
+===================
+
+Once a candidate passes qualification, create a real Lead record using the existing database model.
+
+Populate:
+
+* companyName
+* website
+* description
+* industry
+* location
+* socialProfiles
+* signals
+* evidence
+* relevanceReason
+* opportunity
+* source
+* discoveredAt
+* radarId
+* status
+
+Do not invent missing information.
+
+Unknown values should remain null/empty and display:
+
+“Not found”
+
+or
+
+“Not verified”
+
+==================================================
+9. CONTACTS
+===========
+
+DO NOT build aggressive contact scraping yet.
+
+For Phase 2, only store contact information if it is obtained from an approved/connected provider or is clearly publicly available through permitted sources.
+
+Do not guess email addresses.
+
+Do not construct emails such as:
+
+[firstname@company.com](mailto:firstname@company.com)
+
+unless an actual source verifies them.
+
+If no contact is found:
+
+CONTACT NOT FOUND
+
+This is acceptable.
+
+We will build a dedicated contact-enrichment phase later.
+
+==================================================
+10. LIVE DISCOVERY UI
+=====================
+
+Keep the current Discover UI.
+
+Add a LIVE MODE state.
+
+When a Radar runs, show real progress:
+
+Finding candidates…
+Researching websites…
+Checking signals…
+Verifying evidence…
+Qualifying opportunities…
+Saving leads…
+
+Do not fake progress.
+
+The progress state should reflect actual backend stages.
+
+When finished:
+
+“23 candidates researched”
+
+“11 qualified opportunities”
+
+“7 possible fits”
+
+“5 excluded”
+
+Allow the user to inspect the reasoning.
+
+==================================================
+11. LEAD DETAIL
+===============
+
+Improve the existing Lead Detail page only where necessary.
+
+For real leads show:
+
+COMPANY
+
+WHAT THEY DO
+
+WHY RADAR FOUND THEM
+
+WHAT RADAR OBSERVED
+
+POTENTIAL OPPORTUNITY
+
+EVIDENCE
+
+SOURCES
+
+CONTACTS
+
+STATUS
+
+Clearly distinguish:
+
+Verified information
+AI inference
+Suggested opportunity
+
+Example:
+
+VERIFIED
+
+“Company launched a new product page on…”
+
+INFERENCE
+
+“This creates a potential opportunity for product demonstration content.”
+
+SUGGESTION
+
+“Possible UGC angle: unboxing + first-use demonstration.”
+
+==================================================
+12. ERROR HANDLING
+==================
+
+Handle:
+
+Search provider unavailable
+API rate limit
+Invalid API key
+Timeout
+Research failure
+Partial results
+No candidates
+No qualified leads
+
+Never silently replace failed live research with demo data.
+
+Example:
+
+LIVE MODE
+
+Research provider unavailable.
+
+Connect a provider in Settings to run live discovery.
+
+==================================================
+13. LOGGING
+===========
+
+Add backend logging for each Radar run.
+
+Store:
+
+Radar run ID
+Radar ID
+Start time
+End time
+Provider used
+Candidates discovered
+Candidates researched
+Candidates qualified
+Errors
+Status
+
+This will help debug the real system.
+
+==================================================
+14. COST CONTROL
+================
+
+Do not blindly research hundreds of candidates.
+
+Implement configurable limits:
+
+Maximum search results
+Maximum candidates to research
+Maximum pages per company
+Maximum run duration
+
+Default Phase 2 settings should be conservative.
+
+Example:
+
+Search:
+30 candidates
+
+Research:
+20 candidates
+
+Qualified results:
+up to 10–20
+
+Make these configurable later.
+
+==================================================
+15. TESTING
+===========
+
+Add tests for:
+
+* candidate normalization
+* URL canonicalization
+* deduplication
+* provider errors
+* qualification
+* evidence storage
+* lead creation
+* incomplete data
+* duplicate companies
+
+Run:
+
+typecheck
+tests
+build
+
+before declaring the phase complete.
+
+==================================================
+16. SECURITY
+============
+
+API keys must only exist server-side.
+
+Use environment variables/secrets.
+
+Never send provider credentials to the browser.
+
+Validate all user-generated Radar queries.
+
+Validate external URLs before storing/processing them.
+
+==================================================
+17. DO NOT BUILD YET
+====================
+
+Do NOT implement:
+
+* automatic Instagram DMs
+* automatic LinkedIn messages
+* mass cold-email sending
+* aggressive contact scraping
+* browser automation for social platforms
+* autonomous outreach
+* large-scale scraping infrastructure
+
+Those belong to later phases.
+
+The goal of this phase is ONLY:
+
+REAL DISCOVERY + REAL RESEARCH + REAL QUALIFICATION + REAL EVIDENCE.
+
+==================================================
+SUCCESS TEST
+============
+
+After implementation, test this exact Radar:
+
+Name:
+INFRAME
+
+Query:
+“Find Indian consumer brands that could benefit from UGC.”
+
+Offer:
+Short-form creator-style product videos.
+
+Criteria:
+
+* Indian
+* consumer-facing
+* active online presence
+* product suitable for visual content
+* evidence of recent activity preferred
+* potential need for creator-style content
+
+Run it in LIVE MODE.
+
+The system must return actual companies from real sources.
+
+For every returned company, I should be able to answer:
+
+1. Who are they?
+2. Is this a real company?
+3. What is their official website?
+4. Why did RADAR find them?
+5. What evidence supports that?
+6. What opportunity might exist?
+7. Where did the information come from?
+
+If those seven questions cannot be answered, the lead should not be presented as a qualified lead.
+
+==================================================
+FINAL REQUIREMENT
+=================
+
+At the end of this task, report:
+
+1. What real provider(s) were connected.
+2. Which environment variables/API keys are required.
+3. Which files/modules were created or modified.
+4. Which existing functionality was preserved.
+5. How to run a LIVE Radar.
+6. What remains disconnected.
+7. Test/build/typecheck results.
+
+Do not claim real discovery works unless you actually tested it with a connected provider and received real results.

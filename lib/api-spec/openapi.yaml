@@ -1,0 +1,448 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Home command center
+  - name: radars
+    description: Saved opportunity searches
+  - name: leads
+    description: Opportunity discovery and lead research
+  - name: outreach
+    description: Personalized outreach workspace
+  - name: pipeline
+    description: Lead pipeline management
+  - name: activity
+    description: Recent RADAR activity
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get the RADAR home summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /radars:
+    get:
+      operationId: listRadars
+      tags: [radars]
+      summary: List saved Radars
+      responses:
+        "200":
+          description: Saved Radars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Radar"
+    post:
+      operationId: createRadar
+      tags: [radars]
+      summary: Create a saved Radar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RadarInput"
+      responses:
+        "201":
+          description: Created Radar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Radar"
+  /radars/{radarId}:
+    get:
+      operationId: getRadar
+      tags: [radars]
+      summary: Get one Radar
+      parameters:
+        - $ref: "#/components/parameters/RadarId"
+      responses:
+        "200":
+          description: Radar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Radar"
+        "404":
+          description: Radar not found
+    post:
+      operationId: runRadar
+      tags: [radars]
+      summary: Run a Radar using its configured provider
+      parameters:
+        - $ref: "#/components/parameters/RadarId"
+      responses:
+        "200":
+          description: Radar run result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RadarRun"
+  /leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List discovered opportunities
+      parameters:
+        - name: radarId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discovered leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+  /leads/{leadId}:
+    get:
+      operationId: getLead
+      tags: [leads]
+      summary: Get a lead with research evidence
+      parameters:
+        - $ref: "#/components/parameters/LeadId"
+      responses:
+        "200":
+          description: Lead detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Lead not found
+    patch:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update a lead status or saved state
+      parameters:
+        - $ref: "#/components/parameters/LeadId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadUpdate"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+  /outreach:
+    get:
+      operationId: listOutreach
+      tags: [outreach]
+      summary: List outreach drafts
+      responses:
+        "200":
+          description: Outreach drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Outreach"
+    post:
+      operationId: createOutreach
+      tags: [outreach]
+      summary: Create a personalized outreach draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OutreachInput"
+      responses:
+        "201":
+          description: Outreach draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Outreach"
+  /outreach/{outreachId}:
+    patch:
+      operationId: updateOutreach
+      tags: [outreach]
+      summary: Approve, edit, or skip an outreach draft
+      parameters:
+        - $ref: "#/components/parameters/OutreachId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OutreachUpdate"
+      responses:
+        "200":
+          description: Updated outreach draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Outreach"
+  /pipeline:
+    get:
+      operationId: getPipeline
+      tags: [pipeline]
+      summary: Get leads grouped by pipeline stage
+      responses:
+        "200":
+          description: Pipeline board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pipeline"
+  /pipeline/{leadId}:
+    patch:
+      operationId: updatePipelineStage
+      tags: [pipeline]
+      summary: Move a lead to another pipeline stage
+      parameters:
+        - $ref: "#/components/parameters/LeadId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PipelineUpdate"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: Get recent RADAR activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+components:
+  parameters:
+    RadarId:
+      name: radarId
+      in: path
+      required: true
+      schema:
+        type: string
+    LeadId:
+      name: leadId
+      in: path
+      required: true
+      schema:
+        type: string
+    OutreachId:
+      name: outreachId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Radar:
+      type: object
+      required: [id, name, description, target, offer, criteria, status, leadCount]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        target: { type: string }
+        offer: { type: string }
+        criteria:
+          type: array
+          items: { type: string }
+        status: { type: string, enum: [active, paused] }
+        leadCount: { type: integer }
+    RadarInput:
+      type: object
+      required: [name, description, target, offer, criteria]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        target: { type: string }
+        offer: { type: string }
+        criteria:
+          type: array
+          items: { type: string }
+    RadarRun:
+      type: object
+      required: [radar, stages, leadsFound, demoMode]
+      properties:
+        radar: { $ref: "#/components/schemas/Radar" }
+        stages:
+          type: array
+          items: { type: string }
+        leadsFound: { type: integer }
+        demoMode: { type: boolean }
+    Dashboard:
+      type: object
+      required: [newOpportunities, needsAttention, outreachReady, totalLeads, demoMode]
+      properties:
+        newOpportunities: { type: integer }
+        needsAttention: { type: integer }
+        outreachReady: { type: integer }
+        totalLeads: { type: integer }
+        demoMode: { type: boolean }
+        activeRadar:
+          anyOf:
+            - { $ref: "#/components/schemas/Radar" }
+            - { type: "null" }
+    Lead:
+      type: object
+      required: [id, companyName, description, industry, location, relevance, signals, evidence, opportunity, source, sourceStatus, discoveredAt, radarId, status, saved]
+      properties:
+        id: { type: string }
+        companyName: { type: string }
+        website: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        linkedin: { type: ["string", "null"] }
+        description: { type: string }
+        industry: { type: string }
+        location: { type: string }
+        founder: { type: ["string", "null"] }
+        publicEmail: { type: ["string", "null"] }
+        relevance: { type: integer, minimum: 0, maximum: 100 }
+        signals:
+          type: array
+          items: { type: string }
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+        opportunity:
+          type: array
+          items: { type: string }
+        source: { type: string }
+        sourceStatus: { type: string, enum: [demo, connected, not_verified] }
+        discoveredAt: { type: string }
+        radarId: { type: string }
+        status:
+          type: string
+          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+        saved: { type: boolean }
+        contactVerified: { type: boolean }
+    LeadUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+        saved: { type: boolean }
+    Evidence:
+      type: object
+      required: [id, statement, sourceName, sourceStatus, observedAt]
+      properties:
+        id: { type: string }
+        statement: { type: string }
+        sourceName: { type: string }
+        sourceUrl: { type: ["string", "null"] }
+        sourceStatus: { type: string, enum: [demo, connected, not_verified] }
+        observedAt: { type: string }
+    Outreach:
+      type: object
+      required: [id, leadId, companyName, channel, subject, message, whyThisMessage, status, createdAt, canSend]
+      properties:
+        id: { type: string }
+        leadId: { type: string }
+        companyName: { type: string }
+        channel: { type: string, enum: [email, instagram, linkedin] }
+        subject: { type: string }
+        message: { type: string }
+        whyThisMessage: { type: string }
+        status: { type: string, enum: [draft, approved, skipped] }
+        createdAt: { type: string }
+        canSend: { type: boolean }
+    OutreachInput:
+      type: object
+      required: [leadId, channel, tone, offer]
+      properties:
+        leadId: { type: string }
+        channel: { type: string, enum: [email, instagram, linkedin] }
+        tone: { type: string, enum: [human, casual, direct, professional] }
+        offer: { type: string }
+    OutreachUpdate:
+      type: object
+      properties:
+        subject: { type: string }
+        message: { type: string }
+        status: { type: string, enum: [draft, approved, skipped] }
+    Pipeline:
+      type: object
+      required: [columns]
+      properties:
+        columns:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/Lead"
+    PipelineUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+    Activity:
+      type: object
+      required: [id, type, title, detail, leadId, createdAt]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [opportunity, follow_up, research] }
+        title: { type: string }
+        detail: { type: string }
+        leadId: { type: string }
+        createdAt: { type: string }
+

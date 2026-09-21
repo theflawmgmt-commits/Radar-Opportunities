@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "RADAR"
+description = "An opportunity discovery workspace for creators, freelancers, founders, and small businesses. RADAR helps users define what they are looking for, understand why a demo lead is relevant, and prepare human outreach without pretending external research or sending is connected."
+version = "1.0.0"
+id = "artifacts/radar"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18529
+
+[services.development]
+run = "pnpm --filter @workspace/radar run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/radar", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/radar/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18529"
+BASE_PATH = "/"
