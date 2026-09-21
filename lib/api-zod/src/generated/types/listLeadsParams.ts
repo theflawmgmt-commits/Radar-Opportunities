@@ -5,8 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListLeadsMode } from './listLeadsMode';
 
 export type ListLeadsParams = {
 radarId?: string;
 search?: string;
+mode?: ListLeadsMode;
 };

@@ -33,7 +33,9 @@ import type {
   PipelineUpdate,
   Radar,
   RadarInput,
-  RadarRun
+  RadarRun,
+  RadarRunInput,
+  RunRadar400
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -471,14 +473,29 @@ export const getRunRadarUrl = (radarId: string,) => {
 /**
  * @summary Run a Radar using its configured provider
  */
-export const runRadar = async (radarId: string, options?: Parameters<typeof customFetch>[1]): Promise<RadarRun> => {
+export const runRadar = async (radarId: string,
+    radarRunInput?: RadarRunInput, options?: Parameters<typeof customFetch>[1]): Promise<RadarRun> => {
 
-  return customFetch<RadarRun>(getRunRadarUrl(radarId),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RadarRun>(getRunRadarUrl(radarId),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(radarRunInput)
   }
 );}
 
@@ -488,7 +505,7 @@ export const runRadar = async (radarId: string, options?: Parameters<typeof cust
 
 export const getRunRadarMutationKey = () => ['runRadar'] as const;
 
-export const getRunRadarMutationOptions = <TError = ErrorType<unknown>,
+export const getRunRadarMutationOptions = <TError = ErrorType<RunRadar400>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runRadar>>, TError,RunRadarMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof runRadar>>, TError,RunRadarMutationVariables, TContext> => {
 
@@ -503,9 +520,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof runRadar>>, RunRadarMutationVariables> = (props) => {
-          const {radarId} = props ?? {};
+          const {radarId,data} = props ?? {};
 
-          return  runRadar(radarId,requestOptions)
+          return  runRadar(radarId,data,requestOptions)
         }
 
 
@@ -516,14 +533,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type RunRadarMutationResult = NonNullable<Awaited<ReturnType<typeof runRadar>>>
-
-    export type RunRadarMutationError = ErrorType<unknown>
-    export type RunRadarMutationVariables = {radarId: string}
+    export type RunRadarMutationBody = BodyType<RadarRunInput> | undefined
+    export type RunRadarMutationError = ErrorType<RunRadar400>
+    export type RunRadarMutationVariables = {radarId: string;data?: BodyType<RadarRunInput>}
 
     /**
  * @summary Run a Radar using its configured provider
  */
-export const useRunRadar = <TError = ErrorType<unknown>,
+export const useRunRadar = <TError = ErrorType<RunRadar400>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runRadar>>, TError,RunRadarMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof runRadar>>,

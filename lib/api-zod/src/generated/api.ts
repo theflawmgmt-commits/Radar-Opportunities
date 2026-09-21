@@ -107,6 +107,12 @@ export const RunRadarParams = zod.object({
   "radarId": zod.coerce.string()
 })
 
+export const runRadarBodyModeDefault = `demo`;
+
+export const RunRadarBody = zod.object({
+  "mode": zod.enum(['demo', 'live']).default(runRadarBodyModeDefault)
+})
+
 export const RunRadarResponse = zod.object({
   "radar": zod.object({
   "id": zod.string(),
@@ -120,7 +126,10 @@ export const RunRadarResponse = zod.object({
 }),
   "stages": zod.array(zod.string()),
   "leadsFound": zod.number().int(),
-  "demoMode": zod.boolean()
+  "demoMode": zod.boolean(),
+  "mode": zod.enum(['demo', 'live']).optional(),
+  "candidatesResearched": zod.number().int().optional(),
+  "error": zod.string().optional()
 })
 
 
@@ -129,7 +138,8 @@ export const RunRadarResponse = zod.object({
  */
 export const ListLeadsQueryParams = zod.object({
   "radarId": zod.coerce.string().optional(),
-  "search": zod.coerce.string().optional()
+  "search": zod.coerce.string().optional(),
+  "mode": zod.enum(['demo', 'live']).optional()
 })
 
 export const listLeadsResponseRelevanceMin = 0;

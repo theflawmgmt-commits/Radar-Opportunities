@@ -6,10 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Radar } from './radar';
+import type { RadarRunMode } from './radarRunMode';
 
 export interface RadarRun {
   radar: Radar;
   stages: string[];
   leadsFound: number;
   demoMode: boolean;
+  mode?: RadarRunMode;
+  candidatesResearched?: number;
+  error?: string;
 }

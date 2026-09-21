@@ -37,11 +37,34 @@ export interface RadarInput {
   criteria: string[];
 }
 
+export type RadarRunInputMode = typeof RadarRunInputMode[keyof typeof RadarRunInputMode];
+
+
+export const RadarRunInputMode = {
+  demo: 'demo',
+  live: 'live',
+} as const;
+
+export interface RadarRunInput {
+  mode?: RadarRunInputMode;
+}
+
+export type RadarRunMode = typeof RadarRunMode[keyof typeof RadarRunMode];
+
+
+export const RadarRunMode = {
+  demo: 'demo',
+  live: 'live',
+} as const;
+
 export interface RadarRun {
   radar: Radar;
   stages: string[];
   leadsFound: number;
   demoMode: boolean;
+  mode?: RadarRunMode;
+  candidatesResearched?: number;
+  error?: string;
 }
 
 export interface Dashboard {
@@ -261,8 +284,22 @@ export interface Activity {
   createdAt: string;
 }
 
+export type RunRadar400 = {
+  error: string;
+  code?: string;
+};
+
 export type ListLeadsParams = {
 radarId?: string;
 search?: string;
+mode?: ListLeadsMode;
 };
+
+export type ListLeadsMode = typeof ListLeadsMode[keyof typeof ListLeadsMode];
+
+
+export const ListLeadsMode = {
+  demo: 'demo',
+  live: 'live',
+} as const;
 
