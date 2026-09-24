@@ -19,6 +19,8 @@ const demoRadar: Radar = {
   leadCount: 10,
 };
 
+import { buildOpportunityBrief } from "./opportunity-brief";
+
 const evidence = (id: string, statement: string, sourceName: string): Evidence => ({
   id,
   statement,
@@ -42,29 +44,33 @@ const demoLead = (
   website: string | null,
   instagram: string | null,
   status: Lead["status"] = "new",
-): Lead => ({
-  id,
-  companyName,
-  website,
-  instagram,
-  linkedin: null,
-  description,
-  industry,
-  location,
-  founder,
-  publicEmail,
-  relevance,
-  signals,
-  evidence: signals.map((signal, index) => evidence(`${id}-e${index + 1}`, signal, "RADAR demo research")),
-  opportunity,
-  source: "RADAR demo dataset",
-  sourceStatus: "demo",
-  discoveredAt: "2026-09-18",
-  radarId: demoRadar.id,
-  status,
-  saved: false,
-  contactVerified: false,
-});
+): Lead => {
+  const lead: Lead = {
+    id,
+    companyName,
+    website,
+    instagram,
+    linkedin: null,
+    description,
+    industry,
+    location,
+    founder,
+    publicEmail,
+    relevance,
+    signals,
+    evidence: signals.map((signal, index) => evidence(`${id}-e${index + 1}`, signal, "RADAR demo research")),
+    opportunity,
+    source: "RADAR demo dataset",
+    sourceStatus: "demo",
+    discoveredAt: "2026-09-18",
+    radarId: demoRadar.id,
+    status,
+    saved: false,
+    contactVerified: false,
+  };
+  lead.opportunityBrief = buildOpportunityBrief(lead);
+  return lead;
+};
 
 export const leads: Lead[] = [
   demoLead(

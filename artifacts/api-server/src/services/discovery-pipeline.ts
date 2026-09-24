@@ -11,6 +11,7 @@ import {
 } from "./providers";
 import { qualifyCandidate } from "./intelligence";
 import { enrichCandidate } from "./enrichment";
+import { buildOpportunityBrief } from "./opportunity-brief";
 import { saveLiveLeads, saveLiveRadar } from "./db-storage";
 import { logger } from "../lib/logger";
 
@@ -283,6 +284,7 @@ export async function runDiscoveryPipeline(
       primaryContact: enrichment.primaryContact,
       enrichmentSummary: enrichment.summary,
     };
+    lead.opportunityBrief = buildOpportunityBrief(lead);
 
     leads.push(lead);
   }

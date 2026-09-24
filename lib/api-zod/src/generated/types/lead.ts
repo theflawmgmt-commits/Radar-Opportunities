@@ -12,6 +12,7 @@ import type { LeadObservableSignalsItem } from './leadObservableSignalsItem';
 import type { LeadScoreBreakdown } from './leadScoreBreakdown';
 import type { LeadSourceStatus } from './leadSourceStatus';
 import type { LeadStatus } from './leadStatus';
+import type { OpportunityBrief } from './opportunityBrief';
 import type { Person } from './person';
 
 export interface Lead {
@@ -52,4 +53,5 @@ export interface Lead {
   contactPoints?: ContactPoint[];
   primaryContact?: Person | null;
   enrichmentSummary?: string;
+  opportunityBrief?: OpportunityBrief;
 }

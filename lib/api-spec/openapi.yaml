@@ -458,6 +458,100 @@ components:
             - type: "null"
         enrichmentSummary:
           type: string
+        opportunityBrief:
+          $ref: "#/components/schemas/OpportunityBrief"
+    OpportunityBrief:
+      type: object
+      required:
+        - summary
+        - whyRelevant
+        - opportunity
+        - observableFacts
+        - inferences
+        - contactEvidence
+        - recommendedNextAction
+        - confidence
+        - sources
+      properties:
+        summary:
+          type: string
+        whyRelevant:
+          type: array
+          items:
+            type: string
+        opportunity:
+          type: object
+          required:
+            - hypothesis
+            - explanation
+          properties:
+            hypothesis:
+              type: string
+            explanation:
+              type: string
+        observableFacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+        inferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+        primaryContact:
+          anyOf:
+            - $ref: "#/components/schemas/Person"
+            - type: "null"
+        contactEvidence:
+          type: object
+          required:
+            - status
+            - details
+            - channels
+          properties:
+            status:
+              type: string
+              enum: [VERIFIED_DIRECT, SUPPORTED_DIRECT, COMPANY_ONLY, ABSENT]
+            details:
+              type: string
+            primaryEmail:
+              type: ["string", "null"]
+            channels:
+              type: array
+              items:
+                type: string
+        recommendedNextAction:
+          type: object
+          required:
+            - action
+            - label
+            - reason
+          properties:
+            action:
+              type: string
+              enum: [draft_outreach, research_contact, review_evidence, archive_lead]
+            label:
+              type: string
+            reason:
+              type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sources:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - url
+            properties:
+              name:
+                type: string
+              url:
+                type: string
+              observedAt:
+                type: string
+              status:
+                type: string
     ContactPoint:
       type: object
       required: [id, type, value, scope, verificationStatus, confidence, sourceUrl, sourceName, observedAt, isDirect]

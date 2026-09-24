@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode, useMemo, useState } from 're
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import {
-  ArrowLeft, ArrowUpRight, Bookmark, Check, ChevronDown, CircleHelp,
+  ArrowDown, ArrowLeft, ArrowUpRight, Bookmark, Check, ChevronDown, CircleHelp,
   Compass, Edit3, ExternalLink, FileText, Filter, Gauge, Globe2, Instagram, Layers3,
   Linkedin, Mail, Menu, MoreHorizontal, Phone, Plus, Radar as RadarIcon, RefreshCw, Search,
   Send, Settings2, ShieldCheck, Sparkles, Target, UserRound, Users, X, Zap,
@@ -197,7 +197,127 @@ function Discover() {
   const toggleSaved = (lead: Lead) => update.mutate({ leadId: lead.id, data: { saved: !lead.saved } }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getListLeadsQueryKey({ search: search || undefined, mode }) }); toast({ title: lead.saved ? 'Removed from saved' : 'Opportunity saved' }); } });
   return <PageFrame><PageHeader eyebrow={mode === 'live' ? "Opportunity desk (Live)" : "Opportunity desk (Demo)"} title="Find the opening." description={mode === 'live' ? "Specific companies and verified web signals discovered live with Firecrawl. URLs link out directly to source websites." : "Specific companies, visible signals, and the evidence behind each suggestion. Fictional demo brief."} action={<Link href="/create" data-testid="link-discover-new-radar" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-xs font-semibold hover:bg-muted"><Plus size={14} /> New Radar</Link>} /><div className="mb-7 flex flex-col gap-3 border-y border-border py-4 md:flex-row"><div className="relative flex-1"><Search size={16} className="absolute left-3 top-3 text-muted-foreground" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search companies, industries, places…" data-testid="input-discover-search" className="radar-input h-10 pl-9" /></div><button onClick={() => setSavedOnly(!savedOnly)} data-testid="button-filter-saved" className={cx('inline-flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-xs font-semibold', savedOnly ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.08)] text-[hsl(var(--primary))]' : 'border-border bg-card')}><Bookmark size={14} className={savedOnly ? 'fill-current' : ''} /> Saved only</button><button data-testid="button-filter-menu" className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-semibold hover:bg-muted"><Filter size={14} /> Filters <ChevronDown size={13} /></button></div>{leads.isLoading ? <LoadingRows count={5} /> : leads.isError ? <ErrorState onRetry={() => leads.refetch()} /> : filtered.length ? <div className="space-y-3">{filtered.map((lead, i) => <LeadRow key={lead.id} lead={lead} index={i} onSave={() => toggleSaved(lead)} onOpen={() => setLocation(`/leads/${lead.id}`)} />)}</div> : <EmptyState title={savedOnly ? 'No saved opportunities' : (mode === 'live' ? 'No live opportunities yet' : 'No opportunities yet')} detail={savedOnly ? 'Save a lead when you see a real opening.' : (mode === 'live' ? 'Run a Radar in Live Mode to discover companies using Firecrawl.' : 'Run a Radar to find companies that fit your brief.')} href={savedOnly ? undefined : '/create'} action={mode === 'live' ? "Run a Live Radar" : "Create a Radar"} />}</PageFrame>;
 }
-function LeadRow({ lead, index, onSave, onOpen }: { lead: Lead; index: number; onSave: () => void; onOpen: () => void }) { return <div className="group grid gap-4 border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/.45)] hover:shadow-[0_8px_24px_hsl(var(--foreground)/.06)] md:grid-cols-[1fr_1.3fr_auto] md:items-center" style={{ animationDelay: `${index * 35}ms` }} data-testid={`card-lead-${lead.id}`}><div className="min-w-0"><div className="flex items-start gap-3"><div className="grid size-9 shrink-0 place-items-center rounded-full bg-[hsl(var(--primary)/.1)] text-xs font-semibold text-[hsl(var(--primary))]">{lead.companyName.slice(0, 2).toUpperCase()}</div><div className="min-w-0"><h3 className="truncate text-sm font-semibold">{lead.companyName}</h3><p className="mt-1 truncate text-xs text-muted-foreground">{lead.industry} · {lead.location}</p></div></div><div className="mt-4 flex flex-wrap gap-1.5">{lead.signals.slice(0, 3).map(signal => <span key={signal} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{signal}</span>)}</div></div><div><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Why it surfaced</span><div className="flex items-center gap-1.5">{lead.fit && <span className={cx("rounded-full px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold", lead.fit === 'HIGH RELEVANCE' ? 'bg-emerald-100 text-emerald-800' : lead.fit === 'POSSIBLE RELEVANCE' ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground')}>{lead.fit}</span>}<span className="text-xs font-semibold text-[hsl(var(--primary))]">{lead.relevance}/100</span></div></div><p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{lead.description}</p><div className="mt-2 flex items-center gap-2 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground"><span className={cx("rounded px-1.5 py-0.5", lead.sourceStatus === 'connected' ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-[hsl(var(--accent)/.22)] text-foreground")}>{sourceLabel(lead.sourceStatus)}</span><span>{formatDate(lead.discoveredAt)}</span></div></div><div className="flex items-center gap-2 md:flex-col md:items-end"><button onClick={onSave} aria-label={lead.saved ? 'Remove saved lead' : 'Save lead'} data-testid={`button-save-lead-${lead.id}`} className={cx('grid size-9 place-items-center rounded-md border border-border transition-colors hover:border-[hsl(var(--primary))]', lead.saved ? 'bg-[hsl(var(--accent)/.24)] text-[hsl(var(--primary))]' : 'bg-background text-muted-foreground')}><Bookmark size={15} className={lead.saved ? 'fill-current' : ''} /></button><button onClick={onOpen} data-testid={`button-open-lead-${lead.id}`} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Inspect <ArrowUpRight size={13} /></button></div></div>; }
+function LeadRow({ lead, index, onSave, onOpen }: { lead: Lead; index: number; onSave: () => void; onOpen: () => void }) {
+  const brief = lead.opportunityBrief;
+  const whyRelevantText = brief?.whyRelevant?.[0] || lead.description;
+  const opportunityText = brief?.opportunity?.hypothesis || lead.opportunity?.[0] || lead.signals?.[0];
+  const contactState = brief?.contactEvidence?.status ?? (lead.contactVerified ? 'VERIFIED_DIRECT' : lead.contactPoints?.length ? 'COMPANY_ONLY' : 'ABSENT');
+
+  return (
+    <div
+      className="group grid gap-4 border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/.45)] hover:shadow-[0_8px_24px_hsl(var(--foreground)/.06)] md:grid-cols-[1.1fr_1.4fr_auto] md:items-center"
+      style={{ animationDelay: `${index * 35}ms` }}
+      data-testid={`card-lead-${lead.id}`}
+    >
+      <div className="min-w-0">
+        <div className="flex items-start gap-3">
+          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-[hsl(var(--primary)/.1)] text-xs font-semibold text-[hsl(var(--primary))]">
+            {lead.companyName.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold">{lead.companyName}</h3>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {lead.industry} · {lead.location}
+            </p>
+            {lead.website && (
+              <a
+                href={lead.website}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-[hsl(var(--primary))]"
+              >
+                <Globe2 size={11} /> {lead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </a>
+            )}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {lead.signals.slice(0, 2).map((signal) => (
+            <span key={signal} className="rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              {signal}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-3 md:border-t-0 md:pt-0">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {lead.fit && (
+              <span
+                className={cx(
+                  "rounded px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold",
+                  lead.fit === 'HIGH RELEVANCE'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : lead.fit === 'POSSIBLE RELEVANCE'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {lead.fit}
+              </span>
+            )}
+            <span className="text-xs font-semibold text-[hsl(var(--primary))] font-mono-radar">
+              {lead.relevance}/100
+            </span>
+          </div>
+
+          <div>
+            {contactState === 'VERIFIED_DIRECT' ? (
+              <span className="rounded bg-emerald-100 px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-emerald-800">
+                Direct Contact Verified
+              </span>
+            ) : contactState === 'SUPPORTED_DIRECT' ? (
+              <span className="rounded bg-amber-100 px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-amber-800">
+                Direct Contact Supported
+              </span>
+            ) : contactState === 'COMPANY_ONLY' ? (
+              <span className="rounded bg-muted px-2 py-0.5 text-[9px] font-mono-radar uppercase font-medium text-muted-foreground">
+                Company Contact Only
+              </span>
+            ) : (
+              <span className="rounded bg-muted px-2 py-0.5 text-[9px] font-mono-radar uppercase text-muted-foreground">
+                No Contact Observed
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">Why relevant:</span>
+          <p className="line-clamp-1 text-xs text-foreground font-medium">{whyRelevantText}</p>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">Opportunity:</span>
+          <p className="line-clamp-1 text-xs text-muted-foreground">{opportunityText}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 md:flex-col md:items-end">
+        <button
+          onClick={onSave}
+          aria-label={lead.saved ? 'Remove saved lead' : 'Save lead'}
+          data-testid={`button-save-lead-${lead.id}`}
+          className={cx(
+            'grid size-9 place-items-center rounded-md border border-border transition-colors hover:border-[hsl(var(--primary))]',
+            lead.saved ? 'bg-[hsl(var(--accent)/.24)] text-[hsl(var(--primary))]' : 'bg-background text-muted-foreground',
+          )}
+        >
+          <Bookmark size={15} className={lead.saved ? 'fill-current' : ''} />
+        </button>
+        <button
+          onClick={onOpen}
+          data-testid={`button-open-lead-${lead.id}`}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          Inspect brief <ArrowUpRight size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function LeadDetail() {
   const { leadId = '' } = useParams<{ leadId: string }>();
@@ -235,9 +355,21 @@ function LeadDetail() {
     onError: () => toast({ title: 'Could not create draft' })
   });
 
-  const primary = data.primaryContact;
+  const brief = data.opportunityBrief;
+  const primary = brief?.primaryContact ?? data.primaryContact;
   const peopleList = data.people ?? [];
   const contactPointsList = data.contactPoints ?? [];
+  const observedFacts = brief?.observableFacts ?? data.evidence.filter((e) => e.type === 'VERIFIED');
+  const inferencesList = brief?.inferences ?? data.evidence.filter((e) => e.type === 'INFERRED');
+  const nextAction = brief?.recommendedNextAction;
+  const sourcesList = brief?.sources ?? (data.evidence
+    .filter((e) => e.sourceUrl)
+    .map((e) => ({
+      name: e.sourceName,
+      url: e.sourceUrl!,
+      observedAt: e.observedAt,
+    }))
+  );
 
   return (
     <PageFrame>
@@ -246,6 +378,7 @@ function LeadDetail() {
       </Link>
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
         <div>
+          {/* Header */}
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -257,79 +390,347 @@ function LeadDetail() {
                     {data.fit}
                   </span>
                 )}
+                {brief?.confidence && (
+                  <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-mono-radar uppercase tracking-[.08em] font-semibold text-muted-foreground">
+                    {brief.confidence} evidence completeness
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground">{data.industry} · {data.location}</span>
               </div>
               <h1 className="font-display text-6xl leading-[.9] tracking-[-.04em]">{data.companyName}</h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{data.description}</p>
+              {data.website && (
+                <div className="mt-3">
+                  <a
+                    href={data.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-testid="link-lead-website-header"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
+                  >
+                    <Globe2 size={13} /> {data.website} <ExternalLink size={11} />
+                  </a>
+                </div>
+              )}
+              <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{data.description}</p>
             </div>
             <button onClick={save} data-testid="button-detail-save" className={cx('grid size-10 shrink-0 place-items-center rounded-md border border-border', data.saved && 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--primary))]')}>
               <Bookmark size={17} className={data.saved ? 'fill-current' : ''} />
             </button>
           </div>
 
-          <div className="grid gap-5 border-y border-border py-6 sm:grid-cols-3">
+          {/* WHO: 4-Dimension Metric Strip */}
+          <div className="mb-10 grid gap-5 border-y border-border py-6 sm:grid-cols-4">
             <div>
-              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">RADAR Relevance Score</div>
-              <div className="mt-2 text-3xl font-semibold text-[hsl(var(--primary))]">{data.relevance}<span className="text-sm text-muted-foreground">/100</span></div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Relevance score</div>
+              <div className="mt-2 text-3xl font-semibold text-[hsl(var(--primary))] font-mono-radar">{data.relevance}<span className="text-sm text-muted-foreground">/100</span></div>
               <div className="mt-1 text-[10px] text-muted-foreground">Prioritization heuristic</div>
             </div>
             <div>
-              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Primary Contact</div>
-              <div className="mt-2 text-sm font-semibold">{primary ? primary.name : (data.founder ?? 'Not observed')}</div>
-              <div className="mt-1 text-[10px] text-muted-foreground">{primary ? primary.role : (data.founder ? 'Founder' : 'Not on researched pages')}</div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Confidence</div>
+              <div className="mt-2 text-sm font-semibold capitalize font-mono-radar">{brief?.confidence ?? 'medium'}</div>
+              <div className="mt-1 text-[10px] text-muted-foreground">Evidence completeness only</div>
             </div>
             <div>
-              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Public contact</div>
-              <div className="mt-2 truncate text-sm font-semibold">{data.publicEmail ?? 'Not observed'}</div>
-              <div className="mt-1 text-[10px] text-muted-foreground">{data.contactVerified ? 'Verified business email' : 'Unverified / No direct email'}</div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Person status</div>
+              <div className="mt-2 text-sm font-semibold flex items-center gap-1.5 flex-wrap">
+                <span className={cx(
+                  "rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold",
+                  primary?.verificationStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800' :
+                  primary?.verificationStatus === 'SUPPORTED' ? 'bg-amber-100 text-amber-800' :
+                  'bg-muted text-muted-foreground'
+                )}>
+                  Person: {primary?.verificationStatus ?? (data.founder ? 'SUPPORTED' : 'NOT OBSERVED')}
+                </span>
+                <span className="truncate">{primary ? primary.name : (data.founder ?? 'Not observed')}</span>
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground truncate">{primary ? primary.role : (data.founder ? 'Founder' : 'Not on researched pages')}</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Contact channel</div>
+              <div className="mt-2 text-sm font-semibold flex items-center gap-1.5 flex-wrap">
+                <span className={cx(
+                  "rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold",
+                  brief?.contactEvidence?.status === 'VERIFIED_DIRECT' ? 'bg-emerald-100 text-emerald-800' :
+                  brief?.contactEvidence?.status === 'SUPPORTED_DIRECT' ? 'bg-amber-100 text-amber-800' :
+                  brief?.contactEvidence?.status === 'COMPANY_ONLY' ? 'bg-blue-100 text-blue-800' :
+                  'bg-muted text-muted-foreground'
+                )}>
+                  Contact: {brief?.contactEvidence?.status ?? (data.contactVerified ? 'VERIFIED_DIRECT' : 'ABSENT')}
+                </span>
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground truncate" title={brief?.contactEvidence?.details}>
+                {brief?.contactEvidence?.details || (data.contactVerified ? 'Verified business email' : 'No direct contact observed')}
+              </div>
             </div>
           </div>
 
-          {data.scoreBreakdown?.factors && data.scoreBreakdown.factors.length > 0 && (
-            <section className="mt-8 border border-border bg-card p-5" data-testid="section-score-breakdown">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground font-semibold">Relevance score breakdown</div>
-                <span className="text-[10px] font-mono-radar text-[hsl(var(--primary))] font-semibold">Base {data.scoreBreakdown.baseScore ?? 5} pts + Factors</span>
+          {/* WHY THIS LEAD SURFACED */}
+          <section className="mb-10 border border-border bg-card p-6 md:p-7 shadow-sm" data-testid="section-why-relevant">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4" data-testid="section-opportunity-brief">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-[hsl(var(--primary))]" />
+                <h2 className="text-xs font-mono-radar uppercase tracking-[.16em] font-bold text-foreground">
+                  Why this lead surfaced
+                </h2>
               </div>
-              <div className="space-y-3 divide-y divide-border/60 text-xs">
-                {data.scoreBreakdown.factors.map((f, i) => (
-                  <div key={i} className="flex items-start justify-between gap-4 pt-3">
-                    <div>
-                      <span className="font-semibold text-foreground">{f.factor}</span>
-                      <p className="mt-1 text-xs text-muted-foreground">{f.reason}</p>
-                    </div>
-                    <span className={cx("shrink-0 rounded px-2 py-0.5 font-mono text-xs font-semibold", (f.points ?? 0) >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>
-                      {(f.points ?? 0) >= 0 ? `+${f.points ?? 0}` : f.points}
+              {brief?.whyRelevant && (
+                <span className="text-[10px] font-mono-radar text-muted-foreground">{brief.whyRelevant.length} grounded reasons</span>
+              )}
+            </div>
+
+            <p className="mt-5 text-base md:text-lg leading-8 font-medium text-foreground">
+              {brief?.summary || data.description}
+            </p>
+
+            {brief?.whyRelevant && brief.whyRelevant.length > 0 && (
+              <div className="mt-6 space-y-2.5">
+                {brief.whyRelevant.map((reason, i) => (
+                  <div key={i} className="flex items-start gap-3 border border-border/80 bg-background/60 p-3.5 text-xs leading-5">
+                    <span className="font-mono-radar text-[11px] font-bold text-[hsl(var(--primary))] shrink-0 mt-0.5">
+                      0{i + 1}
                     </span>
+                    <span className="font-medium text-foreground">{reason}</span>
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            )}
+          </section>
 
-          <section className="mt-10">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="font-display text-3xl">Opportunity hypotheses</h2>
+          {/* OPPORTUNITY HYPOTHESIS */}
+          <section className="mb-10 border border-border bg-card p-6 md:p-7 shadow-sm" data-testid="section-opportunity-hypotheses">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <Target size={18} className="text-[hsl(var(--accent))]" />
+                <h2 className="text-xs font-mono-radar uppercase tracking-[.16em] font-bold text-foreground">
+                  Opportunity hypothesis
+                </h2>
                 <span className="rounded bg-[hsl(var(--accent)/.2)] px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-[hsl(var(--accent-foreground))]">
                   Inferred for your offer
                 </span>
               </div>
-              <Sparkles size={18} className="text-[hsl(var(--accent))]" />
             </div>
-            <p className="mb-4 text-xs text-muted-foreground">Conversational entry points derived from observed web signals. Hypotheses to test, not verified internal needs.</p>
-            <div className="grid gap-3">
-              {data.opportunity.map((point, i) => (
-                <div key={point} className="flex gap-3 border border-border bg-card p-4 text-sm leading-6">
-                  <span className="font-mono-radar text-xs text-[hsl(var(--accent-foreground))]">0{i + 1}</span>
-                  <span>{point}</span>
+
+            <p className="mt-3 text-xs text-muted-foreground">
+              Conversational entry points derived from observed web signals. Hypotheses to test, not verified internal needs.
+            </p>
+
+            {brief?.opportunity?.hypothesis && (
+              <div className="mt-4 border border-border/80 bg-background/60 p-4 text-sm leading-7">
+                <div className="text-[10px] font-mono-radar uppercase tracking-[.1em] text-[hsl(var(--primary))] font-semibold mb-1">
+                  Synthesized angle
                 </div>
-              ))}
-            </div>
+                <p className="font-medium text-foreground">{brief.opportunity.hypothesis}</p>
+                {brief.opportunity.explanation && (
+                  <p className="mt-2 text-xs text-muted-foreground leading-5">{brief.opportunity.explanation}</p>
+                )}
+              </div>
+            )}
+
+            {data.opportunity.length > 0 && (
+              <div className="mt-3 grid gap-2.5">
+                {data.opportunity.map((point, i) => (
+                  <div key={point} className="flex gap-3 border border-border/80 bg-background/60 p-3.5 text-xs leading-5">
+                    <span className="font-mono-radar text-xs text-[hsl(var(--accent-foreground))] shrink-0">0{i + 1}</span>
+                    <span>{point}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
+          {/* RECOMMENDED NEXT ACTION */}
+          {nextAction && (
+            <section className="mb-10" data-testid="section-next-action">
+              <div
+                data-testid="banner-next-action"
+                className={cx(
+                  "flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-lg border shadow-sm transition-all",
+                  nextAction.action === 'draft_outreach'
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-foreground"
+                    : nextAction.action === 'research_contact'
+                    ? "bg-amber-500/10 border-amber-500/30 text-foreground"
+                    : nextAction.action === 'review_evidence'
+                    ? "bg-blue-500/10 border-blue-500/30 text-foreground"
+                    : "bg-muted/60 border-border text-foreground"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 shrink-0">
+                    {nextAction.action === 'draft_outreach' ? (
+                      <Send size={20} className="text-emerald-600 dark:text-emerald-400" />
+                    ) : nextAction.action === 'research_contact' ? (
+                      <Users size={20} className="text-amber-600 dark:text-amber-400" />
+                    ) : nextAction.action === 'review_evidence' ? (
+                      <FileText size={20} className="text-blue-600 dark:text-blue-400" />
+                    ) : (
+                      <Bookmark size={20} className="text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono-radar uppercase tracking-[.14em] font-bold text-muted-foreground">
+                        Recommended Next Action
+                      </span>
+                      <span className="rounded bg-background px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold border border-border">
+                        {nextAction.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground font-medium">
+                      {nextAction.reason}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {nextAction.action === 'draft_outreach' ? (
+                    <button
+                      onClick={draft}
+                      disabled={createOutreach.isPending}
+                      data-testid="button-brief-draft"
+                      className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                    >
+                      {createOutreach.isPending ? 'Drafting…' : 'Draft outreach'} <Send size={13} />
+                    </button>
+                  ) : nextAction.action === 'research_contact' ? (
+                    data.website ? (
+                      <a
+                        href={data.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:bg-muted"
+                      >
+                        Search website <ExternalLink size={13} />
+                      </a>
+                    ) : (
+                      <span className="text-xs font-mono-radar text-muted-foreground">Manual lookup recommended</span>
+                    )
+                  ) : nextAction.action === 'review_evidence' ? (
+                    <a
+                      href="#section-observed-facts"
+                      className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:bg-muted"
+                    >
+                      Inspect observations <ArrowDown size={13} />
+                    </a>
+                  ) : (
+                    <button
+                      onClick={save}
+                      className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:bg-muted"
+                    >
+                      {data.saved ? 'Remove saved' : 'Save lead'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Observed Facts vs Inferences */}
+          <div className="mt-12 space-y-10" id="section-observed-facts">
+            {/* Observable Facts */}
+            <section data-testid="section-observed-facts">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-3xl">Observable facts</h2>
+                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-mono-radar uppercase font-bold text-foreground">
+                      VERIFIED FACTS
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Directly extracted from researched public pages. Observable business data only.</p>
+                </div>
+                <span className="text-[10px] font-mono-radar uppercase text-muted-foreground">{observedFacts.length} observations</span>
+              </div>
+              {observedFacts.length > 0 ? (
+                <div className="space-y-3">
+                  {observedFacts.map(item => (
+                    <div key={item.id} className="border-l-2 border-emerald-600 bg-card px-5 py-4">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-sm leading-6 font-medium text-foreground">{item.statement}</p>
+                        <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold bg-muted text-foreground">
+                          VERIFIED
+                        </span>
+                      </div>
+                      {item.excerpt && (
+                        <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2.5 rounded border border-border/40">
+                          &ldquo;{item.excerpt}&rdquo;
+                        </p>
+                      )}
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">
+                        <span>{item.sourceName}</span>
+                        <span>Observed {formatDate(item.observedAt)}</span>
+                        {item.sourceUrl && (
+                          <a href={item.sourceUrl} target="_blank" rel="noreferrer" data-testid={`link-evidence-${item.id}`} className="inline-flex items-center gap-1 text-[hsl(var(--primary))] font-semibold hover:underline">
+                            Open source <ExternalLink size={11} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded border border-dashed border-border bg-card/60 p-6 text-center text-xs text-muted-foreground">
+                  <FileText size={22} className="mx-auto mb-2 opacity-40" />
+                  <p className="font-medium text-foreground">No direct factual observations recorded on researched pages.</p>
+                </div>
+              )}
+            </section>
+
+            {/* Inferences */}
+            <section data-testid="section-inferences">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-3xl">Inferences &amp; hypotheses</h2>
+                    <span className="rounded bg-[hsl(var(--accent)/.2)] px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-[hsl(var(--accent-foreground))]">
+                      INFERRED
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Interpretations derived from observable signals. Potential opportunity angles, not internal company statements.</p>
+                </div>
+                <span className="text-[10px] font-mono-radar uppercase text-muted-foreground">{inferencesList.length} hypotheses</span>
+              </div>
+              {inferencesList.length > 0 ? (
+                <div className="space-y-3">
+                  {inferencesList.map(item => (
+                    <div key={item.id} className="border-l-2 border-[hsl(var(--accent))] bg-card px-5 py-4">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-sm leading-6 font-medium text-foreground">{item.statement}</p>
+                        <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold bg-[hsl(var(--accent)/.15)] text-[hsl(var(--accent-foreground))]">
+                          INFERRED
+                        </span>
+                      </div>
+                      {item.excerpt && (
+                        <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2.5 rounded border border-border/40">
+                          &ldquo;{item.excerpt}&rdquo;
+                        </p>
+                      )}
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">
+                        <span>{item.sourceName}</span>
+                        <span>Observed {formatDate(item.observedAt)}</span>
+                        {item.sourceUrl && (
+                          <a href={item.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[hsl(var(--primary))] font-semibold hover:underline">
+                            Open source <ExternalLink size={11} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded border border-dashed border-border bg-card/60 p-6 text-center text-xs text-muted-foreground">
+                  <Sparkles size={22} className="mx-auto mb-2 opacity-40 text-muted-foreground" />
+                  <p className="font-medium text-foreground">No secondary inferences generated for this lead.</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex items-start gap-2.5 rounded border border-border/80 bg-muted/40 p-3.5 text-xs leading-5 text-muted-foreground">
+                <CircleHelp size={15} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" />
+                <span>RADAR rigorously distinguishes observable facts from derived hypotheses. Verified facts were directly observed on the indicated public pages. Hypotheses represent potential conversational angles based on those facts, not claims about company internal decisions.</span>
+              </div>
+            </section>
+          </div>
+
           {/* People & Leadership Section */}
-          <section className="mt-10" data-testid="section-people-leadership">
+          <section className="mt-12" data-testid="section-people-leadership">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="font-display text-3xl">People &amp; leadership</h2>
@@ -411,7 +812,7 @@ function LeadDetail() {
           </section>
 
           {/* Contact Evidence Section */}
-          <section className="mt-10" data-testid="section-contact-evidence">
+          <section className="mt-12" data-testid="section-contact-evidence">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="font-display text-3xl">Contact evidence</h2>
@@ -463,47 +864,55 @@ function LeadDetail() {
             )}
           </section>
 
-          <section className="mt-10">
+          {/* Public Sources Section */}
+          <section className="mt-12" data-testid="section-public-sources">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-3xl">Observable facts, not certainty</h2>
-              <span className="text-[10px] font-mono-radar uppercase text-muted-foreground">{data.evidence.length} observations</span>
-            </div>
-            <div className="space-y-3">
-              {data.evidence.map(item => (
-                <div key={item.id} className="border-l-2 border-[hsl(var(--accent))] bg-card px-5 py-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm leading-6 font-medium">{item.statement}</p>
-                    {item.type && (
-                      <span className={cx("shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold", item.type === 'VERIFIED' ? "bg-muted text-foreground" : "bg-[hsl(var(--accent)/.15)] text-[hsl(var(--accent-foreground))]")}>
-                        {item.type === 'VERIFIED' ? 'VERIFIED FACT' : 'INFERRED HYPOTHESIS'}
-                      </span>
-                    )}
-                  </div>
-                  {item.excerpt && (
-                    <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2 rounded border border-border/40">
-                      &ldquo;{item.excerpt}&rdquo;
-                    </p>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">
-                    <span>{item.sourceName}</span>
-                    <span>Observed {formatDate(item.observedAt)}</span>
-                    {item.confidence && <span>{item.confidence} confidence</span>}
-                    {item.sourceUrl && (
-                      <a href={item.sourceUrl} target="_blank" rel="noreferrer" data-testid={`link-evidence-${item.id}`} className="inline-flex items-center gap-1 text-[hsl(var(--primary))]">
-                        Open source <ExternalLink size={11} />
-                      </a>
-                    )}
-                  </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="font-display text-3xl">Public sources</h2>
+                  <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-mono-radar uppercase font-semibold text-muted-foreground">
+                    {sourcesList.length} researched {sourcesList.length === 1 ? 'page' : 'pages'}
+                  </span>
                 </div>
-              ))}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Public web pages researched during discovery and contact verification. Specific claim citations and page excerpts are linked directly under Observable Facts above.
+                </p>
+              </div>
+              <Globe2 size={18} className="text-muted-foreground" />
             </div>
-            <div className="mt-6 flex items-start gap-2.5 rounded border border-border/80 bg-muted/40 p-3.5 text-xs leading-5 text-muted-foreground">
-              <CircleHelp size={15} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" />
-              <span>RADAR identifies opportunities based on public web observations. Observations are factual data points extracted directly from researched pages. Opportunity angles are hypotheses tailored to your offer, not guarantees of client fit.</span>
-            </div>
+            {sourcesList.length > 0 ? (
+              <div className="grid gap-2">
+                {sourcesList.map((src, i) => (
+                  <div key={i} className="flex flex-wrap items-center justify-between gap-3 border border-border bg-card p-3.5 text-xs">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground truncate">{(src as any).name || (src as any).title || src.url}</p>
+                      <p className="font-mono text-[11px] text-muted-foreground truncate">{src.url}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {src.observedAt && (
+                        <span className="text-[10px] font-mono-radar text-muted-foreground">
+                          Observed {formatDate(src.observedAt)}
+                        </span>
+                      )}
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--primary))] hover:bg-muted"
+                      >
+                        Visit <ExternalLink size={11} />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No public sources recorded.</p>
+            )}
           </section>
         </div>
 
+        {/* Sidebar */}
         <aside>
           <div className="sticky top-24 space-y-4">
             <div className="rounded-lg bg-[hsl(var(--primary))] p-5 text-[hsl(var(--primary-foreground))]">
@@ -514,6 +923,29 @@ function LeadDetail() {
                 {createOutreach.isPending ? 'Drafting…' : 'Draft outreach'} <Send size={14} />
               </button>
             </div>
+
+            {data.scoreBreakdown?.factors && data.scoreBreakdown.factors.length > 0 && (
+              <div className="border border-border bg-card p-5" data-testid="section-score-breakdown">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground font-semibold">Score breakdown</div>
+                  <span className="text-[10px] font-mono-radar text-[hsl(var(--primary))] font-semibold">Base {data.scoreBreakdown.baseScore ?? 5} pts</span>
+                </div>
+                <div className="space-y-3 divide-y divide-border/60 text-xs">
+                  {data.scoreBreakdown.factors.map((f, i) => (
+                    <div key={i} className="flex items-start justify-between gap-4 pt-3">
+                      <div>
+                        <span className="font-semibold text-foreground">{f.factor}</span>
+                        <p className="mt-1 text-xs text-muted-foreground">{f.reason}</p>
+                      </div>
+                      <span className={cx("shrink-0 rounded px-2 py-0.5 font-mono text-xs font-semibold", (f.points ?? 0) >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>
+                        {(f.points ?? 0) >= 0 ? `+${f.points ?? 0}` : f.points}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="border border-border bg-card p-5">
               <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground">Public links</div>
               <div className="mt-4 space-y-3 text-xs">

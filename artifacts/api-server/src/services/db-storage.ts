@@ -2,6 +2,14 @@ import { db, getDb, isDatabaseConfigured, leadsTable, radarsTable } from "@works
 import type { Lead, Radar } from "@workspace/api-zod";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { buildOpportunityBrief } from "./opportunity-brief";
+
+export function withOpportunityBrief(lead: Lead): Lead {
+  return {
+    ...lead,
+    opportunityBrief: lead.opportunityBrief ?? buildOpportunityBrief(lead),
+  };
+}
 
 // Fallback in-memory store for live records when PostgreSQL is not configured in dev
 const inMemoryLiveRadars = new Map<string, Radar>();
@@ -50,14 +58,15 @@ export async function saveLiveRadar(radar: Radar): Promise<Radar> {
 }
 
 export async function saveLiveLeads(leads: Lead[]): Promise<void> {
-  for (const lead of leads) {
+  const preparedLeads = leads.map(withOpportunityBrief);
+  for (const lead of preparedLeads) {
     inMemoryLiveLeads.set(lead.id, lead);
   }
 
-  if (isDbConnected() && leads.length > 0) {
+  if (isDbConnected() && preparedLeads.length > 0) {
     try {
       const database = getDb();
-      for (const lead of leads) {
+      for (const lead of preparedLeads) {
         await database
           .insert(leadsTable)
           .values({
@@ -131,36 +140,38 @@ export async function getLiveLeadsForRadar(
         .where(eq(leadsTable.radarId, radarId));
 
       return rows
-        .map((row) => ({
-          id: row.id,
-          radarId: row.radarId,
-          companyName: row.companyName,
-          website: row.website,
-          instagram: row.instagram,
-          linkedin: row.linkedin,
-          description: row.description,
-          industry: row.industry,
-          location: row.location,
-          founder: row.founder,
-          publicEmail: row.publicEmail,
-          relevance: row.relevance,
-          signals: row.signals as string[],
-          evidence: row.evidence as Lead["evidence"],
-          opportunity: row.opportunity as string[],
-          source: row.source,
-          sourceStatus: row.sourceStatus as Lead["sourceStatus"],
-          discoveredAt: row.discoveredAt.toISOString(),
-          status: row.status as Lead["status"],
-          saved: row.saved,
-          contactVerified: row.contactVerified,
-          fit: (row.fit as Lead["fit"]) ?? undefined,
-          scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
-          observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
-          people: (row.people as Lead["people"]) ?? undefined,
-          contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
-          primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
-          enrichmentSummary: row.enrichmentSummary ?? undefined,
-        }))
+        .map((row) =>
+          withOpportunityBrief({
+            id: row.id,
+            radarId: row.radarId,
+            companyName: row.companyName,
+            website: row.website,
+            instagram: row.instagram,
+            linkedin: row.linkedin,
+            description: row.description,
+            industry: row.industry,
+            location: row.location,
+            founder: row.founder,
+            publicEmail: row.publicEmail,
+            relevance: row.relevance,
+            signals: row.signals as string[],
+            evidence: row.evidence as Lead["evidence"],
+            opportunity: row.opportunity as string[],
+            source: row.source,
+            sourceStatus: row.sourceStatus as Lead["sourceStatus"],
+            discoveredAt: row.discoveredAt.toISOString(),
+            status: row.status as Lead["status"],
+            saved: row.saved,
+            contactVerified: row.contactVerified,
+            fit: (row.fit as Lead["fit"]) ?? undefined,
+            scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
+            observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
+            people: (row.people as Lead["people"]) ?? undefined,
+            contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
+            primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
+            enrichmentSummary: row.enrichmentSummary ?? undefined,
+          }),
+        )
         .filter((lead) => {
           if (!query) return true;
           return [
@@ -177,6 +188,7 @@ export async function getLiveLeadsForRadar(
 
   // Fallback to in-memory live leads
   return Array.from(inMemoryLiveLeads.values())
+    .map(withOpportunityBrief)
     .filter((lead) => lead.radarId === radarId)
     .filter((lead) => {
       if (!query) return true;
@@ -198,36 +210,38 @@ export async function getAllLiveLeads(search?: string): Promise<Lead[]> {
       const rows = await database.select().from(leadsTable);
 
       return rows
-        .map((row) => ({
-          id: row.id,
-          radarId: row.radarId,
-          companyName: row.companyName,
-          website: row.website,
-          instagram: row.instagram,
-          linkedin: row.linkedin,
-          description: row.description,
-          industry: row.industry,
-          location: row.location,
-          founder: row.founder,
-          publicEmail: row.publicEmail,
-          relevance: row.relevance,
-          signals: row.signals as string[],
-          evidence: row.evidence as Lead["evidence"],
-          opportunity: row.opportunity as string[],
-          source: row.source,
-          sourceStatus: row.sourceStatus as Lead["sourceStatus"],
-          discoveredAt: row.discoveredAt.toISOString(),
-          status: row.status as Lead["status"],
-          saved: row.saved,
-          contactVerified: row.contactVerified,
-          fit: (row.fit as Lead["fit"]) ?? undefined,
-          scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
-          observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
-          people: (row.people as Lead["people"]) ?? undefined,
-          contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
-          primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
-          enrichmentSummary: row.enrichmentSummary ?? undefined,
-        }))
+        .map((row) =>
+          withOpportunityBrief({
+            id: row.id,
+            radarId: row.radarId,
+            companyName: row.companyName,
+            website: row.website,
+            instagram: row.instagram,
+            linkedin: row.linkedin,
+            description: row.description,
+            industry: row.industry,
+            location: row.location,
+            founder: row.founder,
+            publicEmail: row.publicEmail,
+            relevance: row.relevance,
+            signals: row.signals as string[],
+            evidence: row.evidence as Lead["evidence"],
+            opportunity: row.opportunity as string[],
+            source: row.source,
+            sourceStatus: row.sourceStatus as Lead["sourceStatus"],
+            discoveredAt: row.discoveredAt.toISOString(),
+            status: row.status as Lead["status"],
+            saved: row.saved,
+            contactVerified: row.contactVerified,
+            fit: (row.fit as Lead["fit"]) ?? undefined,
+            scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
+            observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
+            people: (row.people as Lead["people"]) ?? undefined,
+            contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
+            primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
+            enrichmentSummary: row.enrichmentSummary ?? undefined,
+          }),
+        )
         .filter((lead) => {
           if (!query) return true;
           return [
@@ -242,15 +256,17 @@ export async function getAllLiveLeads(search?: string): Promise<Lead[]> {
     }
   }
 
-  return Array.from(inMemoryLiveLeads.values()).filter((lead) => {
-    if (!query) return true;
-    return [
-      lead.companyName,
-      lead.industry,
-      lead.location,
-      lead.description,
-    ].some((val) => val.toLowerCase().includes(query));
-  });
+  return Array.from(inMemoryLiveLeads.values())
+    .map(withOpportunityBrief)
+    .filter((lead) => {
+      if (!query) return true;
+      return [
+        lead.companyName,
+        lead.industry,
+        lead.location,
+        lead.description,
+      ].some((val) => val.toLowerCase().includes(query));
+    });
 }
 
 export async function getLiveLeadById(leadId: string): Promise<Lead | null> {
@@ -265,7 +281,7 @@ export async function getLiveLeadById(leadId: string): Promise<Lead | null> {
 
       if (rows[0]) {
         const row = rows[0];
-        return {
+        return withOpportunityBrief({
           id: row.id,
           radarId: row.radarId,
           companyName: row.companyName,
@@ -294,14 +310,15 @@ export async function getLiveLeadById(leadId: string): Promise<Lead | null> {
           contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
           primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
           enrichmentSummary: row.enrichmentSummary ?? undefined,
-        };
+        });
       }
     } catch (err) {
       logger.error({ err, leadId }, "Failed to fetch live lead from PostgreSQL");
     }
   }
 
-  return inMemoryLiveLeads.get(leadId) ?? null;
+  const inMemory = inMemoryLiveLeads.get(leadId);
+  return inMemory ? withOpportunityBrief(inMemory) : null;
 }
 
 export async function updateLiveLead(
@@ -325,5 +342,5 @@ export async function updateLiveLead(
     }
   }
 
-  return existing ?? (await getLiveLeadById(leadId));
+  return existing ? withOpportunityBrief(existing) : (await getLiveLeadById(leadId));
 }

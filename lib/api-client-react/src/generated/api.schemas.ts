@@ -296,6 +296,74 @@ export interface Person {
   contactPoints: ContactPoint[];
 }
 
+export type OpportunityBriefContactEvidenceStatus = typeof OpportunityBriefContactEvidenceStatus[keyof typeof OpportunityBriefContactEvidenceStatus];
+
+
+export const OpportunityBriefContactEvidenceStatus = {
+  VERIFIED_DIRECT: 'VERIFIED_DIRECT',
+  SUPPORTED_DIRECT: 'SUPPORTED_DIRECT',
+  COMPANY_ONLY: 'COMPANY_ONLY',
+  ABSENT: 'ABSENT',
+} as const;
+
+export type OpportunityBriefRecommendedNextActionAction = typeof OpportunityBriefRecommendedNextActionAction[keyof typeof OpportunityBriefRecommendedNextActionAction];
+
+
+export const OpportunityBriefRecommendedNextActionAction = {
+  draft_outreach: 'draft_outreach',
+  research_contact: 'research_contact',
+  review_evidence: 'review_evidence',
+  archive_lead: 'archive_lead',
+} as const;
+
+export type OpportunityBriefConfidence = typeof OpportunityBriefConfidence[keyof typeof OpportunityBriefConfidence];
+
+
+export const OpportunityBriefConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type OpportunityBriefOpportunity = {
+  hypothesis: string;
+  explanation: string;
+};
+
+export type OpportunityBriefContactEvidence = {
+  status: OpportunityBriefContactEvidenceStatus;
+  details: string;
+  /** @nullable */
+  primaryEmail?: string | null;
+  channels: string[];
+};
+
+export type OpportunityBriefRecommendedNextAction = {
+  action: OpportunityBriefRecommendedNextActionAction;
+  label: string;
+  reason: string;
+};
+
+export type OpportunityBriefSourcesItem = {
+  name: string;
+  url: string;
+  observedAt?: string;
+  status?: string;
+};
+
+export interface OpportunityBrief {
+  summary: string;
+  whyRelevant: string[];
+  opportunity: OpportunityBriefOpportunity;
+  observableFacts: Evidence[];
+  inferences: Evidence[];
+  primaryContact?: Person | null;
+  contactEvidence: OpportunityBriefContactEvidence;
+  recommendedNextAction: OpportunityBriefRecommendedNextAction;
+  confidence: OpportunityBriefConfidence;
+  sources: OpportunityBriefSourcesItem[];
+}
+
 export interface Lead {
   id: string;
   companyName: string;
@@ -334,6 +402,7 @@ export interface Lead {
   contactPoints?: ContactPoint[];
   primaryContact?: Person | null;
   enrichmentSummary?: string;
+  opportunityBrief?: OpportunityBrief;
 }
 
 export type LeadUpdateStatus = typeof LeadUpdateStatus[keyof typeof LeadUpdateStatus];
