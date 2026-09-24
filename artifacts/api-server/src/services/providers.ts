@@ -95,6 +95,59 @@ export interface Contact {
   source?: string;
 }
 
+export type PersonVerificationStatus = "VERIFIED" | "SUPPORTED" | "SUGGESTED";
+export type ContactPointVerificationStatus = "VERIFIED" | "SUPPORTED" | "NOT_VERIFIED";
+export type RoleCategory =
+  | "founder"
+  | "executive"
+  | "creative_marketing"
+  | "operations"
+  | "unspecified";
+export type ContactPointType =
+  | "email"
+  | "linkedin"
+  | "twitter"
+  | "instagram"
+  | "phone"
+  | "contact_form";
+export type ContactScope = "individual" | "company";
+
+export interface ContactPoint {
+  id: string;
+  type: ContactPointType;
+  value: string;
+  scope: ContactScope;
+  verificationStatus: ContactPointVerificationStatus;
+  confidence: ConfidenceLevel;
+  sourceUrl: string;
+  sourceName: string;
+  observedAt: string;
+  isDirect: boolean;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  role: string;
+  roleCategory: RoleCategory;
+  verificationStatus: PersonVerificationStatus;
+  confidence: ConfidenceLevel;
+  sourceUrl: string;
+  sourceName: string;
+  observedAt: string;
+  excerpt?: string;
+  selectionReason?: string;
+  contactPoints: ContactPoint[];
+}
+
+export interface EnrichmentResult {
+  people: Person[];
+  companyContactPoints: ContactPoint[];
+  primaryContact: Person | null;
+  summary: string;
+  legacyContact: Contact;
+}
+
 export class ProviderError extends Error {
   readonly provider: string;
   readonly code: string;
@@ -145,7 +198,12 @@ export interface QualificationProvider {
 }
 
 export interface EnrichmentProvider {
-  enrich(candidate: CandidateCompany): Promise<Contact>;
+  enrich(
+    candidate: CandidateCompany,
+    primaryPage: ScrapedPage,
+    radar: { offer: string; target: string },
+    researchProvider?: ResearchProvider,
+  ): Promise<EnrichmentResult>;
 }
 
 export interface VerificationProvider {

@@ -39,6 +39,10 @@ export const leadsTable = pgTable("leads", {
   fit: text("fit"),
   scoreBreakdown: jsonb("score_breakdown").$type<unknown>(),
   observableSignals: jsonb("observable_signals").$type<unknown[]>(),
+  people: jsonb("people").$type<unknown[]>(),
+  contactPoints: jsonb("contact_points").$type<unknown[]>(),
+  primaryContact: jsonb("primary_contact").$type<unknown>(),
+  enrichmentSummary: text("enrichment_summary"),
 });
 
 export const outreachTable = pgTable("outreach", {

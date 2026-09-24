@@ -85,6 +85,10 @@ export async function saveLiveLeads(leads: Lead[]): Promise<void> {
             fit: lead.fit ?? null,
             scoreBreakdown: lead.scoreBreakdown ?? null,
             observableSignals: lead.observableSignals ?? null,
+            people: lead.people ?? null,
+            contactPoints: lead.contactPoints ?? null,
+            primaryContact: lead.primaryContact ?? null,
+            enrichmentSummary: lead.enrichmentSummary ?? null,
           })
           .onConflictDoUpdate({
             target: leadsTable.id,
@@ -98,6 +102,10 @@ export async function saveLiveLeads(leads: Lead[]): Promise<void> {
               fit: lead.fit ?? null,
               scoreBreakdown: lead.scoreBreakdown ?? null,
               observableSignals: lead.observableSignals ?? null,
+              people: lead.people ?? null,
+              contactPoints: lead.contactPoints ?? null,
+              primaryContact: lead.primaryContact ?? null,
+              enrichmentSummary: lead.enrichmentSummary ?? null,
             },
           });
       }
@@ -148,6 +156,10 @@ export async function getLiveLeadsForRadar(
           fit: (row.fit as Lead["fit"]) ?? undefined,
           scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
           observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
+          people: (row.people as Lead["people"]) ?? undefined,
+          contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
+          primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
+          enrichmentSummary: row.enrichmentSummary ?? undefined,
         }))
         .filter((lead) => {
           if (!query) return true;
@@ -211,6 +223,10 @@ export async function getAllLiveLeads(search?: string): Promise<Lead[]> {
           fit: (row.fit as Lead["fit"]) ?? undefined,
           scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
           observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
+          people: (row.people as Lead["people"]) ?? undefined,
+          contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
+          primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
+          enrichmentSummary: row.enrichmentSummary ?? undefined,
         }))
         .filter((lead) => {
           if (!query) return true;
@@ -274,6 +290,10 @@ export async function getLiveLeadById(leadId: string): Promise<Lead | null> {
           fit: (row.fit as Lead["fit"]) ?? undefined,
           scoreBreakdown: (row.scoreBreakdown as Lead["scoreBreakdown"]) ?? undefined,
           observableSignals: (row.observableSignals as Lead["observableSignals"]) ?? undefined,
+          people: (row.people as Lead["people"]) ?? undefined,
+          contactPoints: (row.contactPoints as Lead["contactPoints"]) ?? undefined,
+          primaryContact: (row.primaryContact as Lead["primaryContact"]) ?? undefined,
+          enrichmentSummary: row.enrichmentSummary ?? undefined,
         };
       }
     } catch (err) {

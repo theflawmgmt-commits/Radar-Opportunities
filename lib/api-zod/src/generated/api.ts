@@ -201,7 +201,70 @@ export const ListLeadsResponseItem = zod.object({
   "confidence": zod.enum(['high', 'medium', 'low']).optional(),
   "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
   "excerpt": zod.string().optional()
-})).optional()
+})).optional(),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+})).optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+})).optional(),
+  "primaryContact": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+}),zod.null()]).optional(),
+  "enrichmentSummary": zod.string().optional()
 })
 export const ListLeadsResponse = zod.array(ListLeadsResponseItem)
 
@@ -272,7 +335,70 @@ export const GetLeadResponse = zod.object({
   "confidence": zod.enum(['high', 'medium', 'low']).optional(),
   "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
   "excerpt": zod.string().optional()
-})).optional()
+})).optional(),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+})).optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+})).optional(),
+  "primaryContact": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+}),zod.null()]).optional(),
+  "enrichmentSummary": zod.string().optional()
 })
 
 
@@ -347,7 +473,70 @@ export const UpdateLeadResponse = zod.object({
   "confidence": zod.enum(['high', 'medium', 'low']).optional(),
   "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
   "excerpt": zod.string().optional()
-})).optional()
+})).optional(),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+})).optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+})).optional(),
+  "primaryContact": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+}),zod.null()]).optional(),
+  "enrichmentSummary": zod.string().optional()
 })
 
 
@@ -483,7 +672,70 @@ export const GetPipelineResponse = zod.object({
   "confidence": zod.enum(['high', 'medium', 'low']).optional(),
   "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
   "excerpt": zod.string().optional()
-})).optional()
+})).optional(),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+})).optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+})).optional(),
+  "primaryContact": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+}),zod.null()]).optional(),
+  "enrichmentSummary": zod.string().optional()
 })))
 })
 
@@ -558,7 +810,70 @@ export const UpdatePipelineStageResponse = zod.object({
   "confidence": zod.enum(['high', 'medium', 'low']).optional(),
   "type": zod.enum(['VERIFIED', 'INFERRED', 'SUGGESTED']).optional(),
   "excerpt": zod.string().optional()
-})).optional()
+})).optional(),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+})).optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+})).optional(),
+  "primaryContact": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "roleCategory": zod.enum(['founder', 'executive', 'creative_marketing', 'operations', 'unspecified']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'SUGGESTED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "excerpt": zod.string().optional(),
+  "selectionReason": zod.string().optional(),
+  "contactPoints": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['email', 'linkedin', 'twitter', 'instagram', 'phone', 'contact_form']),
+  "value": zod.string(),
+  "scope": zod.enum(['individual', 'company']),
+  "verificationStatus": zod.enum(['VERIFIED', 'SUPPORTED', 'NOT_VERIFIED']),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sourceUrl": zod.string(),
+  "sourceName": zod.string(),
+  "observedAt": zod.string(),
+  "isDirect": zod.boolean()
+}))
+}),zod.null()]).optional(),
+  "enrichmentSummary": zod.string().optional()
 })
 
 

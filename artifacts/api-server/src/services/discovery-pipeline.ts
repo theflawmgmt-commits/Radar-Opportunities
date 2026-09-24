@@ -1,6 +1,7 @@
 import type { Lead, Radar } from "@workspace/api-zod";
 import {
   CandidateCompany,
+  EnrichmentProvider,
   Evidence,
   ProviderError,
   QualificationProvider,
@@ -9,6 +10,7 @@ import {
   SearchProvider,
 } from "./providers";
 import { qualifyCandidate } from "./intelligence";
+import { enrichCandidate } from "./enrichment";
 import { saveLiveLeads, saveLiveRadar } from "./db-storage";
 import { logger } from "../lib/logger";
 
@@ -157,13 +159,14 @@ export interface DiscoveryPipelineOptions {
   searchProvider: SearchProvider;
   researchProvider: ResearchProvider;
   qualificationProvider?: QualificationProvider;
+  enrichmentProvider?: EnrichmentProvider;
   maxCandidates?: number;
   maxResearch?: number;
 }
 
 /**
- * Executes Phase 2.2 Live Discovery Pipeline:
- * Search → Normalize → Deduplicate → Scrape/Research → Observable Signals → Evidence-backed Qualification → Opportunity Hypotheses → Persistence.
+ * Executes Phase 2.3 Live Discovery Pipeline:
+ * Search → Normalize → Deduplicate → Scrape/Research → Observable Signals → Evidence-backed Qualification → Opportunity Hypotheses → Contact Enrichment → Persistence.
  */
 export async function runDiscoveryPipeline(
   radar: Radar,
@@ -217,6 +220,11 @@ export async function runDiscoveryPipeline(
       qualify: async (c, p, r) => qualifyCandidate(c, p, r),
     };
 
+  const enrichmentProvider =
+    options.enrichmentProvider ?? {
+      enrich: async (c, p, r, rp) => enrichCandidate(c, p, r, rp),
+    };
+
   const now = new Date().toISOString();
   const leads: Lead[] = [];
 
@@ -230,21 +238,33 @@ export async function runDiscoveryPipeline(
       criteria: radar.criteria,
     });
 
+    const enrichment = await enrichmentProvider.enrich(
+      candidate,
+      page,
+      { offer: radar.offer, target: radar.target },
+      options.researchProvider,
+    );
+
+    const allContactPoints = [
+      ...enrichment.companyContactPoints,
+      ...enrichment.people.flatMap((p) => p.contactPoints),
+    ];
+
     const lead: Lead = {
       id: leadId,
       radarId: radar.id,
       companyName: candidate.name,
       website: candidate.url,
-      instagram: null,
-      linkedin: null,
+      instagram: enrichment.legacyContact.instagram ?? null,
+      linkedin: enrichment.legacyContact.linkedin ?? null,
       description:
         page.description ||
         candidate.snippet ||
         `Public company discovered from live search for: ${radar.target}`,
       industry: radar.target,
       location: "Verified web domain",
-      founder: null,
-      publicEmail: null,
+      founder: enrichment.legacyContact.founder ?? null,
+      publicEmail: enrichment.legacyContact.publicEmail ?? null,
       relevance: qualification.relevanceScore, // RADAR_RELEVANCE_SCORE
       fit: qualification.fit,
       scoreBreakdown: qualification.scoreBreakdown,
@@ -257,7 +277,11 @@ export async function runDiscoveryPipeline(
       discoveredAt: now,
       status: "researched",
       saved: false,
-      contactVerified: false,
+      contactVerified: enrichment.legacyContact.contactVerified,
+      people: enrichment.people,
+      contactPoints: allContactPoints,
+      primaryContact: enrichment.primaryContact,
+      enrichmentSummary: enrichment.summary,
     };
 
     leads.push(lead);

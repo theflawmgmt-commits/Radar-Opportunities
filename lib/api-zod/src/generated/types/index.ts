@@ -8,6 +8,11 @@
 
 export * from './activity';
 export * from './activityType';
+export * from './contactPoint';
+export * from './contactPointConfidence';
+export * from './contactPointScope';
+export * from './contactPointType';
+export * from './contactPointVerificationStatus';
 export * from './dashboard';
 export * from './evidence';
 export * from './evidenceConfidence';
@@ -36,6 +41,10 @@ export * from './outreachInputTone';
 export * from './outreachStatus';
 export * from './outreachUpdate';
 export * from './outreachUpdateStatus';
+export * from './person';
+export * from './personConfidence';
+export * from './personRoleCategory';
+export * from './personVerificationStatus';
 export * from './pipeline';
 export * from './pipelineColumns';
 export * from './pipelineUpdate';

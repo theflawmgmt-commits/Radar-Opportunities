@@ -201,6 +201,101 @@ export interface Evidence {
   excerpt?: string;
 }
 
+export type PersonRoleCategory = typeof PersonRoleCategory[keyof typeof PersonRoleCategory];
+
+
+export const PersonRoleCategory = {
+  founder: 'founder',
+  executive: 'executive',
+  creative_marketing: 'creative_marketing',
+  operations: 'operations',
+  unspecified: 'unspecified',
+} as const;
+
+export type PersonVerificationStatus = typeof PersonVerificationStatus[keyof typeof PersonVerificationStatus];
+
+
+export const PersonVerificationStatus = {
+  VERIFIED: 'VERIFIED',
+  SUPPORTED: 'SUPPORTED',
+  SUGGESTED: 'SUGGESTED',
+} as const;
+
+export type PersonConfidence = typeof PersonConfidence[keyof typeof PersonConfidence];
+
+
+export const PersonConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type ContactPointType = typeof ContactPointType[keyof typeof ContactPointType];
+
+
+export const ContactPointType = {
+  email: 'email',
+  linkedin: 'linkedin',
+  twitter: 'twitter',
+  instagram: 'instagram',
+  phone: 'phone',
+  contact_form: 'contact_form',
+} as const;
+
+export type ContactPointScope = typeof ContactPointScope[keyof typeof ContactPointScope];
+
+
+export const ContactPointScope = {
+  individual: 'individual',
+  company: 'company',
+} as const;
+
+export type ContactPointVerificationStatus = typeof ContactPointVerificationStatus[keyof typeof ContactPointVerificationStatus];
+
+
+export const ContactPointVerificationStatus = {
+  VERIFIED: 'VERIFIED',
+  SUPPORTED: 'SUPPORTED',
+  NOT_VERIFIED: 'NOT_VERIFIED',
+} as const;
+
+export type ContactPointConfidence = typeof ContactPointConfidence[keyof typeof ContactPointConfidence];
+
+
+export const ContactPointConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface ContactPoint {
+  id: string;
+  type: ContactPointType;
+  value: string;
+  scope: ContactPointScope;
+  verificationStatus: ContactPointVerificationStatus;
+  confidence: ContactPointConfidence;
+  sourceUrl: string;
+  sourceName: string;
+  observedAt: string;
+  isDirect: boolean;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  role: string;
+  roleCategory: PersonRoleCategory;
+  verificationStatus: PersonVerificationStatus;
+  confidence: PersonConfidence;
+  sourceUrl: string;
+  sourceName: string;
+  observedAt: string;
+  excerpt?: string;
+  selectionReason?: string;
+  contactPoints: ContactPoint[];
+}
+
 export interface Lead {
   id: string;
   companyName: string;
@@ -235,6 +330,10 @@ export interface Lead {
   fit?: LeadFit;
   scoreBreakdown?: LeadScoreBreakdown;
   observableSignals?: LeadObservableSignalsItem[];
+  people?: Person[];
+  contactPoints?: ContactPoint[];
+  primaryContact?: Person | null;
+  enrichmentSummary?: string;
 }
 
 export type LeadUpdateStatus = typeof LeadUpdateStatus[keyof typeof LeadUpdateStatus];

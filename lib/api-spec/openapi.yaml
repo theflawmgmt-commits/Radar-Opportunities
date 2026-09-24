@@ -444,6 +444,67 @@ components:
                 type: string
                 enum: [VERIFIED, INFERRED, SUGGESTED]
               excerpt: { type: string }
+        people:
+          type: array
+          items:
+            $ref: "#/components/schemas/Person"
+        contactPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactPoint"
+        primaryContact:
+          anyOf:
+            - $ref: "#/components/schemas/Person"
+            - type: "null"
+        enrichmentSummary:
+          type: string
+    ContactPoint:
+      type: object
+      required: [id, type, value, scope, verificationStatus, confidence, sourceUrl, sourceName, observedAt, isDirect]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [email, linkedin, twitter, instagram, phone, contact_form]
+        value: { type: string }
+        scope:
+          type: string
+          enum: [individual, company]
+        verificationStatus:
+          type: string
+          enum: [VERIFIED, SUPPORTED, NOT_VERIFIED]
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sourceUrl: { type: string }
+        sourceName: { type: string }
+        observedAt: { type: string }
+        isDirect: { type: boolean }
+    Person:
+      type: object
+      required: [id, name, role, roleCategory, verificationStatus, confidence, sourceUrl, sourceName, observedAt, contactPoints]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        roleCategory:
+          type: string
+          enum: [founder, executive, creative_marketing, operations, unspecified]
+        verificationStatus:
+          type: string
+          enum: [VERIFIED, SUPPORTED, SUGGESTED]
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sourceUrl: { type: string }
+        sourceName: { type: string }
+        observedAt: { type: string }
+        excerpt: { type: string }
+        selectionReason: { type: string }
+        contactPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactPoint"
     LeadUpdate:
       type: object
       properties:

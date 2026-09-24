@@ -5,12 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactPoint } from './contactPoint';
 import type { Evidence } from './evidence';
 import type { LeadFit } from './leadFit';
 import type { LeadObservableSignalsItem } from './leadObservableSignalsItem';
 import type { LeadScoreBreakdown } from './leadScoreBreakdown';
 import type { LeadSourceStatus } from './leadSourceStatus';
 import type { LeadStatus } from './leadStatus';
+import type { Person } from './person';
 
 export interface Lead {
   id: string;
@@ -46,4 +48,8 @@ export interface Lead {
   fit?: LeadFit;
   scoreBreakdown?: LeadScoreBreakdown;
   observableSignals?: LeadObservableSignalsItem[];
+  people?: Person[];
+  contactPoints?: ContactPoint[];
+  primaryContact?: Person | null;
+  enrichmentSummary?: string;
 }

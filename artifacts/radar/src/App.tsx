@@ -4,8 +4,8 @@ import { Link, Route, Router as WouterRouter, Switch, useLocation, useParams } f
 import {
   ArrowLeft, ArrowUpRight, Bookmark, Check, ChevronDown, CircleHelp,
   Compass, Edit3, ExternalLink, FileText, Filter, Gauge, Globe2, Instagram, Layers3,
-  Linkedin, Menu, MoreHorizontal, Plus, Radar as RadarIcon, RefreshCw, Search,
-  Send, Settings2, Sparkles, Target, UserRound, X, Zap,
+  Linkedin, Mail, Menu, MoreHorizontal, Phone, Plus, Radar as RadarIcon, RefreshCw, Search,
+  Send, Settings2, ShieldCheck, Sparkles, Target, UserRound, Users, X, Zap,
 } from 'lucide-react';
 import {
   getGetDashboardQueryKey, getGetLeadQueryKey, getGetPipelineQueryKey, getListActivityQueryKey,
@@ -200,10 +200,345 @@ function Discover() {
 function LeadRow({ lead, index, onSave, onOpen }: { lead: Lead; index: number; onSave: () => void; onOpen: () => void }) { return <div className="group grid gap-4 border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/.45)] hover:shadow-[0_8px_24px_hsl(var(--foreground)/.06)] md:grid-cols-[1fr_1.3fr_auto] md:items-center" style={{ animationDelay: `${index * 35}ms` }} data-testid={`card-lead-${lead.id}`}><div className="min-w-0"><div className="flex items-start gap-3"><div className="grid size-9 shrink-0 place-items-center rounded-full bg-[hsl(var(--primary)/.1)] text-xs font-semibold text-[hsl(var(--primary))]">{lead.companyName.slice(0, 2).toUpperCase()}</div><div className="min-w-0"><h3 className="truncate text-sm font-semibold">{lead.companyName}</h3><p className="mt-1 truncate text-xs text-muted-foreground">{lead.industry} · {lead.location}</p></div></div><div className="mt-4 flex flex-wrap gap-1.5">{lead.signals.slice(0, 3).map(signal => <span key={signal} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{signal}</span>)}</div></div><div><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Why it surfaced</span><div className="flex items-center gap-1.5">{lead.fit && <span className={cx("rounded-full px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold", lead.fit === 'HIGH RELEVANCE' ? 'bg-emerald-100 text-emerald-800' : lead.fit === 'POSSIBLE RELEVANCE' ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground')}>{lead.fit}</span>}<span className="text-xs font-semibold text-[hsl(var(--primary))]">{lead.relevance}/100</span></div></div><p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{lead.description}</p><div className="mt-2 flex items-center gap-2 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground"><span className={cx("rounded px-1.5 py-0.5", lead.sourceStatus === 'connected' ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-[hsl(var(--accent)/.22)] text-foreground")}>{sourceLabel(lead.sourceStatus)}</span><span>{formatDate(lead.discoveredAt)}</span></div></div><div className="flex items-center gap-2 md:flex-col md:items-end"><button onClick={onSave} aria-label={lead.saved ? 'Remove saved lead' : 'Save lead'} data-testid={`button-save-lead-${lead.id}`} className={cx('grid size-9 place-items-center rounded-md border border-border transition-colors hover:border-[hsl(var(--primary))]', lead.saved ? 'bg-[hsl(var(--accent)/.24)] text-[hsl(var(--primary))]' : 'bg-background text-muted-foreground')}><Bookmark size={15} className={lead.saved ? 'fill-current' : ''} /></button><button onClick={onOpen} data-testid={`button-open-lead-${lead.id}`} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Inspect <ArrowUpRight size={13} /></button></div></div>; }
 
 function LeadDetail() {
-  const { leadId = '' } = useParams<{ leadId: string }>(); const [, setLocation] = useLocation(); const { toast } = useToast(); const qc = useQueryClient(); const lead = useGetLead(leadId); const update = useUpdateLead(); const createOutreach = useCreateOutreach();
-  if (lead.isLoading) return <PageFrame><LoadingRows count={3} /></PageFrame>; if (lead.isError || !lead.data) return <PageFrame><ErrorState onRetry={() => lead.refetch()} /></PageFrame>;
-  const data = lead.data; const save = () => update.mutate({ leadId, data: { saved: !data.saved } }, { onSuccess: () => { qc.setQueryData(getGetLeadQueryKey(leadId), (old: Lead | undefined) => old ? { ...old, saved: !data.saved } : old); toast({ title: data.saved ? 'Removed from saved' : 'Opportunity saved' }); } }); const draft = () => createOutreach.mutate({ data: { leadId, channel: data.publicEmail ? 'email' : data.instagram ? 'instagram' : 'linkedin', tone: 'human', offer: 'a thoughtful first conversation about where I could help' } }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getListOutreachQueryKey() }); toast({ title: 'Outreach draft created', description: 'Review it before approving anything.' }); setLocation('/outreach'); }, onError: () => toast({ title: 'Could not create draft' }) });
-  return <PageFrame><Link href="/discover" data-testid="link-lead-back" className="mb-8 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Back to opportunities</Link><div className="grid gap-10 lg:grid-cols-[1fr_320px]"><div><div className="mb-8 flex items-start justify-between gap-4"><div><div className="mb-3 flex flex-wrap items-center gap-2"><span className={cx("rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase tracking-[.08em]", data.sourceStatus === 'connected' ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-[hsl(var(--accent)/.22)]")}>{sourceLabel(data.sourceStatus)}</span>{data.fit && <span className={cx("rounded-full px-2.5 py-1 text-[10px] font-mono-radar uppercase tracking-[.08em] font-bold", data.fit === 'HIGH RELEVANCE' ? 'bg-emerald-100 text-emerald-800' : data.fit === 'POSSIBLE RELEVANCE' ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground')}>{data.fit}</span>}<span className="text-xs text-muted-foreground">{data.industry} · {data.location}</span></div><h1 className="font-display text-6xl leading-[.9] tracking-[-.04em]">{data.companyName}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{data.description}</p></div><button onClick={save} data-testid="button-detail-save" className={cx('grid size-10 shrink-0 place-items-center rounded-md border border-border', data.saved && 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--primary))]')}><Bookmark size={17} className={data.saved ? 'fill-current' : ''} /></button></div><div className="grid gap-5 border-y border-border py-6 sm:grid-cols-3"><div><div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">RADAR Relevance Score</div><div className="mt-2 text-3xl font-semibold text-[hsl(var(--primary))]">{data.relevance}<span className="text-sm text-muted-foreground">/100</span></div><div className="mt-1 text-[10px] text-muted-foreground">Prioritization heuristic</div></div><div><div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Founder / lead</div><div className="mt-2 text-sm font-semibold">{data.founder ?? 'Not listed'}</div></div><div><div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Public contact</div><div className="mt-2 truncate text-sm font-semibold">{data.publicEmail ?? 'Not listed'}</div></div></div>{data.scoreBreakdown?.factors && data.scoreBreakdown.factors.length > 0 && <section className="mt-8 border border-border bg-card p-5" data-testid="section-score-breakdown"><div className="mb-4 flex items-center justify-between"><div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground font-semibold">Relevance score breakdown</div><span className="text-[10px] font-mono-radar text-[hsl(var(--primary))] font-semibold">Base {data.scoreBreakdown.baseScore ?? 20} pts + Factors</span></div><div className="space-y-3 divide-y divide-border/60 text-xs">{data.scoreBreakdown.factors.map((f, i) => <div key={i} className="flex items-start justify-between gap-4 pt-3"><div><span className="font-semibold text-foreground">{f.factor}</span><p className="mt-1 text-xs text-muted-foreground">{f.reason}</p></div><span className={cx("shrink-0 rounded px-2 py-0.5 font-mono text-xs font-semibold", (f.points ?? 0) >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>{(f.points ?? 0) >= 0 ? `+${f.points ?? 0}` : f.points}</span></div>)}</div></section>}<section className="mt-10"><div className="mb-2 flex items-center justify-between"><div className="flex items-center gap-3"><h2 className="font-display text-3xl">Opportunity hypotheses</h2><span className="rounded bg-[hsl(var(--accent)/.2)] px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-[hsl(var(--accent-foreground))]">Inferred for your offer</span></div><Sparkles size={18} className="text-[hsl(var(--accent))]" /></div><p className="mb-4 text-xs text-muted-foreground">Conversational entry points derived from observed web signals. Hypotheses to test, not verified internal needs.</p><div className="grid gap-3">{data.opportunity.map((point, i) => <div key={point} className="flex gap-3 border border-border bg-card p-4 text-sm leading-6"><span className="font-mono-radar text-xs text-[hsl(var(--accent-foreground))]">0{i + 1}</span><span>{point}</span></div>)}</div></section><section className="mt-10"><div className="mb-4 flex items-center justify-between"><h2 className="font-display text-3xl">Observable facts, not certainty</h2><span className="text-[10px] font-mono-radar uppercase text-muted-foreground">{data.evidence.length} observations</span></div><div className="space-y-3">{data.evidence.map(item => <div key={item.id} className="border-l-2 border-[hsl(var(--accent))] bg-card px-5 py-4"><div className="flex items-start justify-between gap-2 mb-1"><p className="text-sm leading-6 font-medium">{item.statement}</p>{item.type && <span className={cx("shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold", item.type === 'VERIFIED' ? "bg-muted text-foreground" : "bg-[hsl(var(--accent)/.15)] text-[hsl(var(--accent-foreground))]")}>{item.type === 'VERIFIED' ? 'VERIFIED FACT' : 'INFERRED HYPOTHESIS'}</span>}</div>{item.excerpt && <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2 rounded border border-border/40">"{item.excerpt}"</p>}<div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground"><span>{item.sourceName}</span><span>Observed {formatDate(item.observedAt)}</span>{item.confidence && <span>{item.confidence} confidence</span>}{item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer" data-testid={`link-evidence-${item.id}`} className="inline-flex items-center gap-1 text-[hsl(var(--primary))]">Open source <ExternalLink size={11} /></a>}</div></div>)}</div><div className="mt-6 flex items-start gap-2.5 rounded border border-border/80 bg-muted/40 p-3.5 text-xs leading-5 text-muted-foreground"><CircleHelp size={15} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" /><span>RADAR identifies opportunities based on public web observations. Observations are factual data points extracted directly from researched pages. Opportunity angles are hypotheses tailored to your offer, not guarantees of client fit.</span></div></section></div><aside><div className="sticky top-24 space-y-4"><div className="rounded-lg bg-[hsl(var(--primary))] p-5 text-[hsl(var(--primary-foreground))]"><div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-[hsl(var(--primary-foreground)/.56)]">Next human move</div><h2 className="mt-4 font-display text-3xl">Make it personal.</h2><p className="mt-2 text-sm leading-6 text-[hsl(var(--primary-foreground)/.68)]">Use the evidence as a starting point, not a claim. Edit every line before you approve.</p><button onClick={draft} disabled={createOutreach.isPending} data-testid="button-create-outreach" className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[hsl(var(--accent))] px-4 py-3 text-xs font-semibold text-[hsl(var(--accent-foreground))] disabled:opacity-50">{createOutreach.isPending ? 'Drafting…' : 'Draft outreach'} <Send size={14} /></button></div><div className="border border-border bg-card p-5"><div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground">Public links</div><div className="mt-4 space-y-3 text-xs">{data.website && <a href={data.website} target="_blank" rel="noreferrer" data-testid="link-lead-website" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]"><Globe2 size={15} /> Website <ExternalLink size={12} className="ml-auto" /></a>}{data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" data-testid="link-lead-instagram" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]"><Instagram size={15} /> Instagram <ExternalLink size={12} className="ml-auto" /></a>}{data.linkedin && <a href={data.linkedin} target="_blank" rel="noreferrer" data-testid="link-lead-linkedin" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]"><Linkedin size={15} /> LinkedIn <ExternalLink size={12} className="ml-auto" /></a>}</div></div></div></aside></div></PageFrame>;
+  const { leadId = '' } = useParams<{ leadId: string }>();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const lead = useGetLead(leadId);
+  const update = useUpdateLead();
+  const createOutreach = useCreateOutreach();
+
+  if (lead.isLoading) return <PageFrame><LoadingRows count={3} /></PageFrame>;
+  if (lead.isError || !lead.data) return <PageFrame><ErrorState onRetry={() => lead.refetch()} /></PageFrame>;
+
+  const data = lead.data;
+  const save = () => update.mutate({ leadId, data: { saved: !data.saved } }, {
+    onSuccess: () => {
+      qc.setQueryData(getGetLeadQueryKey(leadId), (old: Lead | undefined) => old ? { ...old, saved: !data.saved } : old);
+      toast({ title: data.saved ? 'Removed from saved' : 'Opportunity saved' });
+    }
+  });
+
+  const draft = () => createOutreach.mutate({
+    data: {
+      leadId,
+      channel: data.publicEmail ? 'email' : data.instagram ? 'instagram' : 'linkedin',
+      tone: 'human',
+      offer: 'a thoughtful first conversation about where I could help'
+    }
+  }, {
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListOutreachQueryKey() });
+      toast({ title: 'Outreach draft created', description: 'Review it before approving anything.' });
+      setLocation('/outreach');
+    },
+    onError: () => toast({ title: 'Could not create draft' })
+  });
+
+  const primary = data.primaryContact;
+  const peopleList = data.people ?? [];
+  const contactPointsList = data.contactPoints ?? [];
+
+  return (
+    <PageFrame>
+      <Link href="/discover" data-testid="link-lead-back" className="mb-8 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+        <ArrowLeft size={14} /> Back to opportunities
+      </Link>
+      <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
+        <div>
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <div>
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className={cx("rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase tracking-[.08em]", data.sourceStatus === 'connected' ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-[hsl(var(--accent)/.22)]")}>
+                  {sourceLabel(data.sourceStatus)}
+                </span>
+                {data.fit && (
+                  <span className={cx("rounded-full px-2.5 py-1 text-[10px] font-mono-radar uppercase tracking-[.08em] font-bold", data.fit === 'HIGH RELEVANCE' ? 'bg-emerald-100 text-emerald-800' : data.fit === 'POSSIBLE RELEVANCE' ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground')}>
+                    {data.fit}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">{data.industry} · {data.location}</span>
+              </div>
+              <h1 className="font-display text-6xl leading-[.9] tracking-[-.04em]">{data.companyName}</h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{data.description}</p>
+            </div>
+            <button onClick={save} data-testid="button-detail-save" className={cx('grid size-10 shrink-0 place-items-center rounded-md border border-border', data.saved && 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--primary))]')}>
+              <Bookmark size={17} className={data.saved ? 'fill-current' : ''} />
+            </button>
+          </div>
+
+          <div className="grid gap-5 border-y border-border py-6 sm:grid-cols-3">
+            <div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">RADAR Relevance Score</div>
+              <div className="mt-2 text-3xl font-semibold text-[hsl(var(--primary))]">{data.relevance}<span className="text-sm text-muted-foreground">/100</span></div>
+              <div className="mt-1 text-[10px] text-muted-foreground">Prioritization heuristic</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Primary Contact</div>
+              <div className="mt-2 text-sm font-semibold">{primary ? primary.name : (data.founder ?? 'Not observed')}</div>
+              <div className="mt-1 text-[10px] text-muted-foreground">{primary ? primary.role : (data.founder ? 'Founder' : 'Not on researched pages')}</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Public contact</div>
+              <div className="mt-2 truncate text-sm font-semibold">{data.publicEmail ?? 'Not observed'}</div>
+              <div className="mt-1 text-[10px] text-muted-foreground">{data.contactVerified ? 'Verified business email' : 'Unverified / No direct email'}</div>
+            </div>
+          </div>
+
+          {data.scoreBreakdown?.factors && data.scoreBreakdown.factors.length > 0 && (
+            <section className="mt-8 border border-border bg-card p-5" data-testid="section-score-breakdown">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground font-semibold">Relevance score breakdown</div>
+                <span className="text-[10px] font-mono-radar text-[hsl(var(--primary))] font-semibold">Base {data.scoreBreakdown.baseScore ?? 5} pts + Factors</span>
+              </div>
+              <div className="space-y-3 divide-y divide-border/60 text-xs">
+                {data.scoreBreakdown.factors.map((f, i) => (
+                  <div key={i} className="flex items-start justify-between gap-4 pt-3">
+                    <div>
+                      <span className="font-semibold text-foreground">{f.factor}</span>
+                      <p className="mt-1 text-xs text-muted-foreground">{f.reason}</p>
+                    </div>
+                    <span className={cx("shrink-0 rounded px-2 py-0.5 font-mono text-xs font-semibold", (f.points ?? 0) >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>
+                      {(f.points ?? 0) >= 0 ? `+${f.points ?? 0}` : f.points}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="mt-10">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-3xl">Opportunity hypotheses</h2>
+                <span className="rounded bg-[hsl(var(--accent)/.2)] px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-[hsl(var(--accent-foreground))]">
+                  Inferred for your offer
+                </span>
+              </div>
+              <Sparkles size={18} className="text-[hsl(var(--accent))]" />
+            </div>
+            <p className="mb-4 text-xs text-muted-foreground">Conversational entry points derived from observed web signals. Hypotheses to test, not verified internal needs.</p>
+            <div className="grid gap-3">
+              {data.opportunity.map((point, i) => (
+                <div key={point} className="flex gap-3 border border-border bg-card p-4 text-sm leading-6">
+                  <span className="font-mono-radar text-xs text-[hsl(var(--accent-foreground))]">0{i + 1}</span>
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* People & Leadership Section */}
+          <section className="mt-10" data-testid="section-people-leadership">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-3xl">People &amp; leadership</h2>
+                <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-mono-radar uppercase font-semibold text-muted-foreground">
+                  {peopleList.length} observed
+                </span>
+              </div>
+              <Users size={18} className="text-muted-foreground" />
+            </div>
+            {data.enrichmentSummary && (
+              <p className="mb-4 text-xs text-muted-foreground bg-muted/20 p-3 rounded border border-border/50">
+                {data.enrichmentSummary}
+              </p>
+            )}
+            {peopleList.length > 0 ? (
+              <div className="space-y-4">
+                {peopleList.map((person) => {
+                  const isPrimary = primary?.name === person.name;
+                  return (
+                    <div key={person.id} className={cx("border bg-card p-5 transition-all", isPrimary ? "border-[hsl(var(--primary)/.45)] ring-1 ring-[hsl(var(--primary)/.2)]" : "border-border")}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-base font-semibold text-foreground">{person.name}</h3>
+                            {isPrimary && (
+                              <span className="rounded-full bg-[hsl(var(--accent)/.25)] px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold text-[hsl(var(--accent-foreground))]">
+                                Primary Contact (Offer-Matched)
+                              </span>
+                            )}
+                            <span className="rounded bg-muted px-2 py-0.5 text-[9px] font-mono-radar uppercase font-semibold text-muted-foreground">
+                              {person.roleCategory.replace('_', ' ')}
+                            </span>
+                            <span className={cx("rounded px-2 py-0.5 text-[9px] font-mono-radar uppercase font-bold", person.verificationStatus === 'VERIFIED' ? "bg-emerald-100 text-emerald-800" : person.verificationStatus === 'SUPPORTED' ? "bg-amber-100 text-amber-800" : "bg-muted text-muted-foreground")}>
+                              {person.verificationStatus}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-[hsl(var(--primary))] font-medium">{person.role}</p>
+                          {person.selectionReason && isPrimary && (
+                            <p className="mt-2 text-xs text-muted-foreground bg-[hsl(var(--primary)/.05)] border-l-2 border-[hsl(var(--primary))] pl-2.5 py-1">
+                              <strong>Why selected:</strong> {person.selectionReason}
+                            </p>
+                          )}
+                          {person.excerpt && (
+                            <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2 rounded border border-border/40">
+                              &ldquo;{person.excerpt}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        {person.sourceUrl && (
+                          <a href={person.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-mono-radar text-[hsl(var(--primary))] hover:underline">
+                            Source <ExternalLink size={10} />
+                          </a>
+                        )}
+                      </div>
+                      {person.contactPoints && person.contactPoints.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2 border-t border-border/60 pt-3">
+                          {person.contactPoints.map((cp) => (
+                            <div key={cp.id} className="inline-flex items-center gap-1.5 rounded border border-border bg-muted/30 px-2.5 py-1 text-xs">
+                              {cp.type === 'email' ? <Mail size={12} className="text-muted-foreground" /> : <Linkedin size={12} className="text-muted-foreground" />}
+                              <span className="font-mono text-xs">{cp.value}</span>
+                              <span className={cx("rounded px-1 text-[8px] font-mono-radar uppercase font-bold", cp.verificationStatus === 'VERIFIED' ? "bg-emerald-100 text-emerald-800" : cp.verificationStatus === 'SUPPORTED' ? "bg-amber-100 text-amber-800" : "bg-muted text-muted-foreground")}>
+                                {cp.verificationStatus}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded border border-dashed border-border bg-card/60 p-6 text-center text-xs text-muted-foreground">
+                <Users size={24} className="mx-auto mb-2 opacity-40" />
+                <p className="font-medium text-foreground">No leadership or team members observed on researched pages.</p>
+                <p className="mt-1">RADAR does not guess names or fabricate people. Inspect public press or company about page directly.</p>
+              </div>
+            )}
+          </section>
+
+          {/* Contact Evidence Section */}
+          <section className="mt-10" data-testid="section-contact-evidence">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-3xl">Contact evidence</h2>
+                <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-mono-radar uppercase font-semibold text-muted-foreground">
+                  {contactPointsList.length} observed
+                </span>
+              </div>
+              <ShieldCheck size={18} className="text-muted-foreground" />
+            </div>
+            {contactPointsList.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {contactPointsList.map((cp) => (
+                  <div key={cp.id} className="flex flex-col justify-between border border-border bg-card p-4 text-xs">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="flex items-center gap-1.5 font-mono-radar uppercase text-[10px] text-muted-foreground">
+                          {cp.type === 'email' && <Mail size={12} />}
+                          {cp.type === 'linkedin' && <Linkedin size={12} />}
+                          {cp.type === 'instagram' && <Instagram size={12} />}
+                          {cp.type === 'phone' && <Phone size={12} />}
+                          {cp.type === 'contact_form' && <Globe2 size={12} />}
+                          {cp.type.replace('_', ' ')} · {cp.scope}
+                        </span>
+                        <span className={cx("rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold", cp.verificationStatus === 'VERIFIED' ? "bg-emerald-100 text-emerald-800" : cp.verificationStatus === 'SUPPORTED' ? "bg-amber-100 text-amber-800" : "bg-muted text-muted-foreground")}>
+                          {cp.verificationStatus}
+                        </span>
+                      </div>
+                      <div className="font-mono text-xs font-semibold break-all text-foreground">
+                        {cp.value}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
+                      <span>{cp.isDirect ? 'Direct personal link' : 'Company general contact'}</span>
+                      {cp.sourceUrl && (
+                        <a href={cp.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-[hsl(var(--primary))] hover:underline">
+                          Source <ExternalLink size={9} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded border border-dashed border-border bg-card/60 p-6 text-center text-xs text-muted-foreground">
+                <Mail size={24} className="mx-auto mb-2 opacity-40" />
+                <p className="font-medium text-foreground">No public contact channels observed on researched pages.</p>
+                <p className="mt-1">RADAR strictly adheres to observed business data and does not synthesize unverified email addresses.</p>
+              </div>
+            )}
+          </section>
+
+          <section className="mt-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-3xl">Observable facts, not certainty</h2>
+              <span className="text-[10px] font-mono-radar uppercase text-muted-foreground">{data.evidence.length} observations</span>
+            </div>
+            <div className="space-y-3">
+              {data.evidence.map(item => (
+                <div key={item.id} className="border-l-2 border-[hsl(var(--accent))] bg-card px-5 py-4">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="text-sm leading-6 font-medium">{item.statement}</p>
+                    {item.type && (
+                      <span className={cx("shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono-radar uppercase font-bold", item.type === 'VERIFIED' ? "bg-muted text-foreground" : "bg-[hsl(var(--accent)/.15)] text-[hsl(var(--accent-foreground))]")}>
+                        {item.type === 'VERIFIED' ? 'VERIFIED FACT' : 'INFERRED HYPOTHESIS'}
+                      </span>
+                    )}
+                  </div>
+                  {item.excerpt && (
+                    <p className="mt-2 text-xs italic text-muted-foreground bg-muted/30 p-2 rounded border border-border/40">
+                      &ldquo;{item.excerpt}&rdquo;
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono-radar uppercase tracking-[.08em] text-muted-foreground">
+                    <span>{item.sourceName}</span>
+                    <span>Observed {formatDate(item.observedAt)}</span>
+                    {item.confidence && <span>{item.confidence} confidence</span>}
+                    {item.sourceUrl && (
+                      <a href={item.sourceUrl} target="_blank" rel="noreferrer" data-testid={`link-evidence-${item.id}`} className="inline-flex items-center gap-1 text-[hsl(var(--primary))]">
+                        Open source <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex items-start gap-2.5 rounded border border-border/80 bg-muted/40 p-3.5 text-xs leading-5 text-muted-foreground">
+              <CircleHelp size={15} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" />
+              <span>RADAR identifies opportunities based on public web observations. Observations are factual data points extracted directly from researched pages. Opportunity angles are hypotheses tailored to your offer, not guarantees of client fit.</span>
+            </div>
+          </section>
+        </div>
+
+        <aside>
+          <div className="sticky top-24 space-y-4">
+            <div className="rounded-lg bg-[hsl(var(--primary))] p-5 text-[hsl(var(--primary-foreground))]">
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-[hsl(var(--primary-foreground)/.56)]">Next human move</div>
+              <h2 className="mt-4 font-display text-3xl">Make it personal.</h2>
+              <p className="mt-2 text-sm leading-6 text-[hsl(var(--primary-foreground)/.68)]">Use the evidence as a starting point, not a claim. Edit every line before you approve.</p>
+              <button onClick={draft} disabled={createOutreach.isPending} data-testid="button-create-outreach" className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[hsl(var(--accent))] px-4 py-3 text-xs font-semibold text-[hsl(var(--accent-foreground))] disabled:opacity-50">
+                {createOutreach.isPending ? 'Drafting…' : 'Draft outreach'} <Send size={14} />
+              </button>
+            </div>
+            <div className="border border-border bg-card p-5">
+              <div className="text-[10px] font-mono-radar uppercase tracking-[.14em] text-muted-foreground">Public links</div>
+              <div className="mt-4 space-y-3 text-xs">
+                {data.website && (
+                  <a href={data.website} target="_blank" rel="noreferrer" data-testid="link-lead-website" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]">
+                    <Globe2 size={15} /> Website <ExternalLink size={12} className="ml-auto" />
+                  </a>
+                )}
+                {data.instagram && (
+                  <a href={data.instagram} target="_blank" rel="noreferrer" data-testid="link-lead-instagram" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]">
+                    <Instagram size={15} /> Instagram <ExternalLink size={12} className="ml-auto" />
+                  </a>
+                )}
+                {data.linkedin && (
+                  <a href={data.linkedin} target="_blank" rel="noreferrer" data-testid="link-lead-linkedin" className="flex items-center gap-3 hover:text-[hsl(var(--primary))]">
+                    <Linkedin size={15} /> LinkedIn <ExternalLink size={12} className="ml-auto" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </PageFrame>
+  );
 }
 
 function OutreachPage() {
