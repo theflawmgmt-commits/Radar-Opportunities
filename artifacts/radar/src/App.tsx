@@ -2,8 +2,8 @@ import { createContext, useContext, type ReactNode, useMemo, useState } from 're
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import {
-  ArrowDown, ArrowLeft, ArrowUpRight, Bookmark, Check, ChevronDown, CircleHelp,
-  Compass, Edit3, ExternalLink, FileText, Filter, Gauge, Globe2, Instagram, Layers3,
+  Archive, ArchiveRestore, ArrowDown, ArrowLeft, ArrowUpRight, Bookmark, Check, ChevronDown, CircleHelp,
+  Compass, Copy, Edit3, ExternalLink, FileText, Filter, Gauge, Globe2, Instagram, Layers3,
   Linkedin, Mail, Menu, MoreHorizontal, Phone, Plus, Radar as RadarIcon, RefreshCw, Search,
   Send, Settings2, ShieldCheck, Sparkles, Target, UserRound, Users, X, Zap,
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import {
   getListLeadsQueryKey, getListOutreachQueryKey, getListRadarsQueryKey, getGetRadarQueryKey,
   useCreateOutreach, useCreateRadar, useGetDashboard, useGetLead, useGetPipeline, useListActivity,
   useListLeads, useListOutreach, useListRadars, useRunRadar, useUpdateLead, useUpdateOutreach,
-  useUpdatePipelineStage,
+  useUpdatePipelineStage, useUpdateRadar,
 } from '@workspace/api-client-react';
 import type { Lead, Outreach, Radar } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -38,7 +38,17 @@ const navItems = [
   { href: '/pipeline', label: 'Pipeline', icon: Layers3 },
   { href: '/radars', label: 'Saved Radars', icon: RadarIcon },
 ];
-const stageLabels = ['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost'];
+const stageLabels = [
+  'discovered',
+  'review',
+  'shortlisted',
+  'outreach_ready',
+  'contacted',
+  'replied',
+  'won',
+  'lost',
+  'archived',
+] as const;
 
 function cx(...classes: Array<string | false | undefined>) { return classes.filter(Boolean).join(' '); }
 function formatDate(value?: string) {
@@ -155,10 +165,26 @@ function Create() {
   const [, setLocation] = useLocation(); const { toast } = useToast(); const qc = useQueryClient();
   const { mode } = useExecutionMode();
   const create = useCreateRadar(); const run = useRunRadar();
-  const [step, setStep] = useState(1); const [form, setForm] = useState({ name: '', target: '', offer: '', description: '', criteria: '' });
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({
+    name: '',
+    target: '',
+    offer: '',
+    description: '',
+    criteria: '',
+    geography: '',
+    intent: '',
+  });
   const criteria = form.criteria.split('\n').map(s => s.trim()).filter(Boolean);
   const canContinue = step === 1 ? form.name && form.target : form.offer;
-  const submit = () => create.mutate({ data: { ...form, criteria } }, {
+  const submit = () => create.mutate({
+    data: {
+      ...form,
+      criteria,
+      geography: form.geography ? form.geography.trim() : undefined,
+      intent: form.intent ? form.intent.trim() : undefined,
+    }
+  }, {
     onSuccess: (radar) => {
       qc.invalidateQueries({ queryKey: getListRadarsQueryKey() });
       toast({ title: 'Radar saved', description: `Brief saved. Running in ${mode.toUpperCase()} mode.` });
@@ -185,7 +211,7 @@ function Create() {
     },
     onError: () => toast({ title: 'Could not save Radar', description: 'Check the fields and try again.' }),
   });
-  return <PageFrame><div className="mx-auto max-w-3xl"><Link href="/" data-testid="link-create-back" className="mb-10 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Back to command center</Link><div className="mb-12"><div className="mb-4 flex items-center gap-2 text-[10px] font-mono-radar uppercase tracking-[.2em] text-[hsl(var(--primary))]"><span>New Radar</span><span className="text-muted-foreground">/</span><span className="text-muted-foreground">Step {step} of 2</span></div><h1 className="font-display text-6xl leading-[.9] tracking-[-.04em]">Make the ask<br /><em className="text-[hsl(var(--primary))]">specific.</em></h1><p className="mt-5 max-w-lg text-sm leading-6 text-muted-foreground">RADAR works best with a point of view. No jargon needed — just tell us who you can help and what you can do for them.</p></div><div className="mb-10 h-1 w-full bg-muted"><div className="h-full bg-[hsl(var(--accent))] transition-all" style={{ width: step === 1 ? '50%' : '100%' }} /></div>{step === 1 ? <div className="space-y-7 rise-in"><Field label="Name your Radar" hint="A short name you’ll recognize later."><input autoFocus value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Independent shops in Portland" data-testid="input-radar-name" className="radar-input" /></Field><Field label="Who are you looking for?" hint="Describe the kind of company, person, or team you want to find."><textarea value={form.target} onChange={e => setForm({ ...form, target: e.target.value })} placeholder="Small hospitality brands with a strong local following…" data-testid="input-radar-target" className="radar-input min-h-28 resize-none" /></Field><Field label="A little more context" hint="Optional. What makes a good fit?"><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="I’m especially interested in teams who are growing but don't have a dedicated creative lead." data-testid="input-radar-description" className="radar-input min-h-24 resize-none" /></Field></div> : <div className="space-y-7 rise-in"><Field label="What can you offer?" hint="This becomes the starting point for personalized outreach."><textarea autoFocus value={form.offer} onChange={e => setForm({ ...form, offer: e.target.value })} placeholder="Brand identity and launch systems for small teams…" data-testid="input-radar-offer" className="radar-input min-h-32 resize-none" /></Field><Field label="What should count as a signal?" hint="One per line. RADAR uses these as a lens, not a verdict."><textarea value={form.criteria} onChange={e => setForm({ ...form, criteria: e.target.value })} placeholder={'Recently launched or rebranded\nHiring for marketing or design\nActive community presence'} data-testid="input-radar-criteria" className="radar-input min-h-32 resize-none" /></Field><div className="flex gap-3 border border-border bg-card p-4 text-xs leading-5 text-muted-foreground"><CircleHelp size={16} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" />Demo mode uses fictional companies and clearly marked evidence. It will never imply connected research or send a message.</div></div>}<div className="mt-10 flex items-center justify-between">{step === 2 ? <button onClick={() => setStep(1)} data-testid="button-create-previous" className="text-xs font-semibold text-muted-foreground hover:text-foreground">Previous</button> : <span />}{step === 1 ? <button disabled={!canContinue} onClick={() => setStep(2)} data-testid="button-create-next" className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40">Continue <ArrowUpRight size={14} /></button> : <button disabled={!canContinue || create.isPending} onClick={submit} data-testid="button-create-submit" className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40">{create.isPending || run.isPending ? 'Building brief…' : 'Save & run Radar'} <Zap size={14} /></button>}</div></div></PageFrame>;
+  return <PageFrame><div className="mx-auto max-w-3xl"><Link href="/" data-testid="link-create-back" className="mb-10 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft size={14} /> Back to command center</Link><div className="mb-12"><div className="mb-4 flex items-center gap-2 text-[10px] font-mono-radar uppercase tracking-[.2em] text-[hsl(var(--primary))]"><span>New Radar</span><span className="text-muted-foreground">/</span><span className="text-muted-foreground">Step {step} of 2</span></div><h1 className="font-display text-6xl leading-[.9] tracking-[-.04em]">Make the ask<br /><em className="text-[hsl(var(--primary))]">specific.</em></h1><p className="mt-5 max-w-lg text-sm leading-6 text-muted-foreground">RADAR works best with a point of view. No jargon needed — just tell us who you can help and what you can do for them.</p></div><div className="mb-10 h-1 w-full bg-muted"><div className="h-full bg-[hsl(var(--accent))] transition-all" style={{ width: step === 1 ? '50%' : '100%' }} /></div>{step === 1 ? <div className="space-y-7 rise-in"><Field label="Name your Radar" hint="A short name you’ll recognize later."><input autoFocus value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Independent shops in Portland" data-testid="input-radar-name" className="radar-input" /></Field><Field label="Who are you looking for?" hint="Describe the kind of company, person, or team you want to find."><textarea value={form.target} onChange={e => setForm({ ...form, target: e.target.value })} placeholder="Small hospitality brands with a strong local following…" data-testid="input-radar-target" className="radar-input min-h-28 resize-none" /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Geography / Region" hint="Optional. Focus discovery geographically."><input value={form.geography} onChange={e => setForm({ ...form, geography: e.target.value })} placeholder="e.g. India, United Kingdom, West Coast" data-testid="input-radar-geography" className="radar-input" /></Field><Field label="Search Intent & Focus" hint="Optional. Strategic qualification lens."><input value={form.intent} onChange={e => setForm({ ...form, intent: e.target.value })} placeholder="e.g. DTC brands with active ecommerce store" data-testid="input-radar-intent" className="radar-input" /></Field></div><Field label="A little more context" hint="Optional. What makes a good fit?"><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="I’m especially interested in teams who are growing but don't have a dedicated creative lead." data-testid="input-radar-description" className="radar-input min-h-24 resize-none" /></Field></div> : <div className="space-y-7 rise-in"><Field label="What can you offer?" hint="This becomes the starting point for personalized outreach."><textarea autoFocus value={form.offer} onChange={e => setForm({ ...form, offer: e.target.value })} placeholder="Brand identity and launch systems for small teams…" data-testid="input-radar-offer" className="radar-input min-h-32 resize-none" /></Field><Field label="What should count as a signal?" hint="One per line. RADAR uses these as a lens, not a verdict."><textarea value={form.criteria} onChange={e => setForm({ ...form, criteria: e.target.value })} placeholder={'Recently launched or rebranded\nHiring for marketing or design\nActive community presence'} data-testid="input-radar-criteria" className="radar-input min-h-32 resize-none" /></Field><div className="flex gap-3 border border-border bg-card p-4 text-xs leading-5 text-muted-foreground"><CircleHelp size={16} className="mt-0.5 shrink-0 text-[hsl(var(--primary))]" />Live mode uses Firecrawl for real company research and observable signals. Nothing is sent without your approval.</div></div>}<div className="mt-10 flex items-center justify-between">{step === 2 ? <button onClick={() => setStep(1)} data-testid="button-create-previous" className="text-xs font-semibold text-muted-foreground hover:text-foreground">Previous</button> : <span />}{step === 1 ? <button disabled={!canContinue} onClick={() => setStep(2)} data-testid="button-create-next" className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40">Continue <ArrowUpRight size={14} /></button> : <button disabled={!canContinue || create.isPending} onClick={submit} data-testid="button-create-submit" className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40">{create.isPending || run.isPending ? 'Building brief…' : 'Save & run Radar'} <Zap size={14} /></button>}</div></div></PageFrame>;
 }
 function Field({ label, hint, children }: { label: string; hint: string; children: ReactNode }) { return <label className="block"><span className="text-sm font-semibold">{label}</span><span className="mt-1 block text-xs text-muted-foreground">{hint}</span><div className="mt-3">{children}</div></label>; }
 
@@ -244,6 +270,9 @@ function LeadRow({ lead, index, onSave, onOpen }: { lead: Lead; index: number; o
       <div className="space-y-2 border-t border-border pt-3 md:border-t-0 md:pt-0">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
+            <span className="rounded bg-muted px-2 py-0.5 text-[9px] font-mono-radar uppercase font-semibold text-muted-foreground">
+              {lead.status.replace('_', ' ')}
+            </span>
             {lead.fit && (
               <span
                 className={cx(
@@ -339,6 +368,22 @@ function LeadDetail() {
     }
   });
 
+  const changeStage = (newStage: string) => update.mutate({ leadId, data: { status: newStage as any } }, {
+    onSuccess: () => {
+      qc.setQueryData(getGetLeadQueryKey(leadId), (old: Lead | undefined) => old ? { ...old, status: newStage as any } : old);
+      qc.invalidateQueries({ queryKey: getGetPipelineQueryKey() });
+      toast({ title: `Pipeline stage: ${newStage.replace('_', ' ')}` });
+    }
+  });
+
+  const shortlist = () => update.mutate({ leadId, data: { status: 'shortlisted', saved: true } }, {
+    onSuccess: () => {
+      qc.setQueryData(getGetLeadQueryKey(leadId), (old: Lead | undefined) => old ? { ...old, status: 'shortlisted', saved: true } : old);
+      qc.invalidateQueries({ queryKey: getGetPipelineQueryKey() });
+      toast({ title: 'Lead shortlisted', description: 'Moved to Shortlisted stage in Pipeline.' });
+    }
+  });
+
   const draft = () => createOutreach.mutate({
     data: {
       leadId,
@@ -413,9 +458,39 @@ function LeadDetail() {
               )}
               <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{data.description}</p>
             </div>
-            <button onClick={save} data-testid="button-detail-save" className={cx('grid size-10 shrink-0 place-items-center rounded-md border border-border', data.saved && 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--primary))]')}>
-              <Bookmark size={17} className={data.saved ? 'fill-current' : ''} />
-            </button>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <select
+                value={data.status}
+                onChange={e => changeStage(e.target.value)}
+                data-testid="select-lead-stage"
+                className="rounded-md border border-border bg-card px-2.5 py-2 text-xs font-mono-radar font-semibold uppercase text-foreground shadow-sm hover:border-[hsl(var(--primary)/.5)] cursor-pointer"
+              >
+                {stageLabels.map(s => (
+                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                ))}
+              </select>
+              {data.status === 'shortlisted' ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  <Check size={14} /> Shortlisted
+                </span>
+              ) : (
+                <button
+                  onClick={shortlist}
+                  data-testid="button-lead-shortlist"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
+                  <Bookmark size={14} /> Shortlist
+                </button>
+              )}
+              <button
+                onClick={save}
+                data-testid="button-detail-save"
+                title={data.saved ? 'Remove saved' : 'Save lead'}
+                className={cx('grid size-9 shrink-0 place-items-center rounded-md border border-border transition-colors hover:border-[hsl(var(--primary))]', data.saved && 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--primary))]')}
+              >
+                <Bookmark size={16} className={data.saved ? 'fill-current' : ''} />
+              </button>
+            </div>
           </div>
 
           {/* WHO: 4-Dimension Metric Strip */}
@@ -974,24 +1049,369 @@ function LeadDetail() {
 }
 
 function OutreachPage() {
-  const { toast } = useToast(); const qc = useQueryClient(); const outreach = useListOutreach(); const update = useUpdateOutreach(); const [editing, setEditing] = useState<string | null>(null); const [draft, setDraft] = useState<Partial<Outreach>>({});
-  const changeStatus = (item: Outreach, status: 'approved' | 'skipped') => update.mutate({ outreachId: item.id, data: { status } }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getListOutreachQueryKey() }); toast({ title: status === 'approved' ? 'Draft approved' : 'Draft skipped', description: status === 'approved' ? 'Approval saved. RADAR will not send it.' : undefined }); } });
-  const saveEdit = (item: Outreach) => update.mutate({ outreachId: item.id, data: { subject: draft.subject, message: draft.message } }, { onSuccess: () => { setEditing(null); qc.invalidateQueries({ queryKey: getListOutreachQueryKey() }); toast({ title: 'Draft updated' }); } });
-  return <PageFrame><PageHeader eyebrow="Human outreach" title="Say the right thing." description="Drafts are a starting point. Approve, edit, or skip — RADAR never sends on your behalf." action={<div className="flex items-center gap-2 text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground"><span className="size-1.5 rounded-full bg-[hsl(var(--accent))]" />Sending disabled</div>} />{outreach.isLoading ? <LoadingRows count={3} /> : outreach.isError ? <ErrorState onRetry={() => outreach.refetch()} /> : outreach.data?.length ? <div className="space-y-5">{outreach.data.map(item => <article key={item.id} className="border border-border bg-card p-5 md:p-7" data-testid={`card-outreach-${item.id}`}><div className="flex flex-col justify-between gap-4 md:flex-row md:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-mono-radar uppercase">{item.channel}</span><span className={cx('rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase', item.status === 'approved' ? 'bg-[hsl(var(--accent)/.25)]' : item.status === 'skipped' ? 'bg-destructive/10 text-destructive' : 'bg-[hsl(var(--primary)/.1)] text-[hsl(var(--primary))]')}>{item.status}</span><span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span></div><h2 className="mt-4 font-display text-3xl">{item.companyName}</h2></div><div className="flex items-center gap-2">{item.status === 'draft' && <><button onClick={() => { setEditing(item.id); setDraft(item); }} data-testid={`button-edit-outreach-${item.id}`} className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><Edit3 size={14} /> Edit</button><button onClick={() => changeStatus(item, 'skipped')} data-testid={`button-skip-outreach-${item.id}`} className="rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Skip</button><button onClick={() => changeStatus(item, 'approved')} data-testid={`button-approve-outreach-${item.id}`} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"><Check size={14} /> Approve</button></>}</div></div>{editing === item.id ? <div className="mt-6 space-y-3"><input value={draft.subject ?? ''} onChange={e => setDraft({ ...draft, subject: e.target.value })} data-testid={`input-outreach-subject-${item.id}`} className="radar-input" /><textarea value={draft.message ?? ''} onChange={e => setDraft({ ...draft, message: e.target.value })} data-testid={`input-outreach-message-${item.id}`} className="radar-input min-h-40 resize-y" /><div className="flex gap-2"><button onClick={() => saveEdit(item)} data-testid={`button-save-outreach-${item.id}`} className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Save changes</button><button onClick={() => setEditing(null)} data-testid={`button-cancel-outreach-${item.id}`} className="rounded-md border border-border px-3 py-2 text-xs font-semibold">Cancel</button></div></div> : <div className="mt-6 grid gap-6 border-t border-border pt-5 md:grid-cols-[1fr_240px]"><div><p className="text-xs font-semibold text-muted-foreground">{item.subject}</p><p className="mt-3 whitespace-pre-line text-sm leading-7">{item.message}</p></div><div className="border-l border-border pl-5"><div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground">Why this message</div><p className="mt-3 text-xs leading-5 text-muted-foreground">{item.whyThisMessage}</p>{item.status === 'approved' && <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-[hsl(var(--primary))]"><Check size={14} /> Approved, not sent</div>}</div></div>}</article>)}</div> : <EmptyState title="No drafts in the queue" detail="Inspect an opportunity and ask RADAR for a human-first draft." href="/discover" action="Find an opportunity" />}</PageFrame>;
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const outreach = useListOutreach();
+  const update = useUpdateOutreach();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Partial<Outreach>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const changeStatus = (item: Outreach, status: 'approved' | 'skipped') => update.mutate({ outreachId: item.id, data: { status } }, {
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListOutreachQueryKey() });
+      toast({ title: status === 'approved' ? 'Draft approved' : 'Draft skipped', description: status === 'approved' ? 'Approval saved. Ready to copy to email client.' : undefined });
+    }
+  });
+
+  const saveEdit = (item: Outreach) => update.mutate({ outreachId: item.id, data: { subject: draft.subject, message: draft.message } }, {
+    onSuccess: () => {
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: getListOutreachQueryKey() });
+      toast({ title: 'Draft updated' });
+    }
+  });
+
+  const copyToClipboard = (item: Outreach) => {
+    const text = item.subject ? `Subject: ${item.subject}\n\n${item.message}` : item.message;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopiedId(item.id);
+    toast({ title: 'Copied to clipboard', description: 'Paste into your email client to send.' });
+    setTimeout(() => setCopiedId(null), 2500);
+  };
+
+  return (
+    <PageFrame>
+      <PageHeader
+        eyebrow="Human outreach"
+        title="Say the right thing."
+        description="Drafts are grounded in observable facts and suggested angles. Approve, edit, or skip — RADAR never sends on your behalf."
+        action={
+          <div className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[10px] font-mono-radar uppercase tracking-[.12em] text-foreground">
+            <span className="size-1.5 rounded-full bg-amber-500" />
+            Sending disabled · Human review required
+          </div>
+        }
+      />
+
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-border bg-card/60 p-4 text-xs">
+        <div className="flex items-start sm:items-center gap-3">
+          <ShieldCheck size={18} className="mt-0.5 sm:mt-0 text-[hsl(var(--primary))] shrink-0" />
+          <p className="text-muted-foreground leading-5">
+            Every draft is composed without guessed claims or fake metrics. Use the draft as a high-conviction conversation starter, then copy to your preferred email client.
+          </p>
+        </div>
+        <span className="rounded bg-muted px-2 py-1 text-[9px] font-mono-radar uppercase font-bold text-muted-foreground shrink-0 self-start sm:self-auto">
+          No automated sending
+        </span>
+      </div>
+
+      {outreach.isLoading ? (
+        <LoadingRows count={3} />
+      ) : outreach.isError ? (
+        <ErrorState onRetry={() => outreach.refetch()} />
+      ) : outreach.data?.length ? (
+        <div className="space-y-5">
+          {outreach.data.map(item => (
+            <article key={item.id} className="border border-border bg-card p-5 md:p-7" data-testid={`card-outreach-${item.id}`}>
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-mono-radar uppercase font-medium">
+                      {item.channel}
+                    </span>
+                    <span className={cx(
+                      'rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase font-bold',
+                      item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
+                      item.status === 'skipped' ? 'bg-destructive/10 text-destructive' :
+                      'bg-[hsl(var(--primary)/.1)] text-[hsl(var(--primary))]'
+                    )}>
+                      {item.status}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
+                  </div>
+                  <h2 className="mt-4 font-display text-3xl">{item.companyName}</h2>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => copyToClipboard(item)}
+                    data-testid={`button-copy-outreach-${item.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                  >
+                    {copiedId === item.id ? (
+                      <>
+                        <Check size={14} className="text-emerald-500" />
+                        <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} />
+                        <span>Copy draft</span>
+                      </>
+                    )}
+                  </button>
+
+                  {item.status === 'draft' && (
+                    <>
+                      <button
+                        onClick={() => { setEditing(item.id); setDraft(item); }}
+                        data-testid={`button-edit-outreach-${item.id}`}
+                        className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                      >
+                        <Edit3 size={14} /> Edit
+                      </button>
+                      <button
+                        onClick={() => changeStatus(item, 'skipped')}
+                        data-testid={`button-skip-outreach-${item.id}`}
+                        className="rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                      >
+                        Skip
+                      </button>
+                      <button
+                        onClick={() => changeStatus(item, 'approved')}
+                        data-testid={`button-approve-outreach-${item.id}`}
+                        className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+                      >
+                        <Check size={14} /> Approve
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {editing === item.id ? (
+                <div className="mt-6 space-y-3">
+                  <input
+                    value={draft.subject ?? ''}
+                    onChange={e => setDraft({ ...draft, subject: e.target.value })}
+                    data-testid={`input-outreach-subject-${item.id}`}
+                    className="radar-input"
+                    placeholder="Subject line…"
+                  />
+                  <textarea
+                    value={draft.message ?? ''}
+                    onChange={e => setDraft({ ...draft, message: e.target.value })}
+                    data-testid={`input-outreach-message-${item.id}`}
+                    className="radar-input min-h-40 resize-y"
+                    placeholder="Email body…"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveEdit(item)}
+                      data-testid={`button-save-outreach-${item.id}`}
+                      className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+                    >
+                      Save changes
+                    </button>
+                    <button
+                      onClick={() => setEditing(null)}
+                      data-testid={`button-cancel-outreach-${item.id}`}
+                      className="rounded-md border border-border px-3 py-2 text-xs font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-6 border-t border-border pt-5 md:grid-cols-[1fr_260px]">
+                  <div>
+                    {item.subject && (
+                      <p className="text-xs font-semibold text-foreground bg-muted/30 p-2.5 rounded border border-border/40 mb-3">
+                        <span className="text-muted-foreground mr-1.5 font-normal">Subject:</span>{item.subject}
+                      </p>
+                    )}
+                    <p className="whitespace-pre-line text-sm leading-7 text-foreground font-medium">{item.message}</p>
+                  </div>
+                  <div className="border-l border-border pl-5">
+                    <div className="text-[10px] font-mono-radar uppercase tracking-[.12em] text-muted-foreground font-bold">Why this message</div>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.whyThisMessage}</p>
+                    {item.status === 'approved' && (
+                      <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                        <Check size={14} /> Approved · ready to send
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No drafts in the queue" detail="Inspect an opportunity and ask RADAR for a human-first draft." href="/discover" action="Find an opportunity" />
+      )}
+    </PageFrame>
+  );
 }
 
 function PipelinePage() {
-  const { toast } = useToast(); const qc = useQueryClient(); const pipeline = useGetPipeline(); const update = useUpdatePipelineStage();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const pipeline = useGetPipeline();
+  const update = useUpdatePipelineStage();
+
   if (pipeline.isLoading) return <PageFrame><PageHeader eyebrow="Pipeline" title="Keep the thread." description="A lightweight view of every conversation in motion." /><LoadingRows count={4} /></PageFrame>;
   if (pipeline.isError) return <PageFrame><ErrorState onRetry={() => pipeline.refetch()} /></PageFrame>;
+
   const columns = pipeline.data?.columns ?? {};
-  const move = (leadId: string, status: string) => update.mutate({ leadId, data: { status: status as 'new' } }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getGetPipelineQueryKey() }); toast({ title: 'Pipeline updated' }); } });
-  return <PageFrame><PageHeader eyebrow="Pipeline" title="Keep the thread." description="Move leads as your relationship changes. The next step should always be obvious." action={<Link href="/discover" data-testid="link-pipeline-discover" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground"><Plus size={14} /> Add from Discover</Link>} /><div className="flex gap-4 overflow-x-auto pb-4">{Object.entries(columns).map(([stage, leads]) => <section key={stage} className="min-w-[265px] flex-1"><div className="mb-3 flex items-center justify-between border-b border-border pb-3"><div className="flex items-center gap-2"><span className={cx('size-2 rounded-full', stage === 'won' ? 'bg-[hsl(var(--primary))]' : stage === 'lost' ? 'bg-destructive' : 'bg-[hsl(var(--accent))]')} /><h2 className="text-xs font-semibold capitalize">{stage.replace('_', ' ')}</h2></div><span className="font-mono-radar text-[10px] text-muted-foreground">{leads.length}</span></div><div className="space-y-3">{leads.map(lead => <div key={lead.id} className="border border-border bg-card p-4 transition-transform hover:-translate-y-0.5" data-testid={`card-pipeline-${lead.id}`}><Link href={`/leads/${lead.id}`} data-testid={`link-pipeline-lead-${lead.id}`} className="block"><div className="flex items-start justify-between gap-2"><h3 className="text-sm font-semibold">{lead.companyName}</h3><ArrowUpRight size={13} className="text-muted-foreground" /></div><p className="mt-1 text-xs text-muted-foreground">{lead.industry}</p></Link><div className="mt-4 flex items-center justify-between border-t border-border pt-3"><span className="text-[10px] font-mono-radar text-muted-foreground">{lead.relevance}/100 relevance</span><select value={stage} onChange={e => move(lead.id, e.target.value)} data-testid={`select-pipeline-stage-${lead.id}`} className="max-w-[110px] bg-transparent text-[10px] font-semibold capitalize outline-none"><option value={stage} hidden>{stage}</option>{stageLabels.filter(s => s !== stage).map(s => <option key={s} value={s}>{s}</option>)}</select></div></div>)}</div></section>)}</div></PageFrame>;
+  const move = (leadId: string, status: string) => update.mutate({ leadId, data: { status: status as any } }, {
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getGetPipelineQueryKey() });
+      toast({ title: `Moved to ${status.replace('_', ' ')}` });
+    }
+  });
+
+  return (
+    <PageFrame>
+      <PageHeader
+        eyebrow="Pipeline"
+        title="Keep the thread."
+        description="Move leads as your relationship changes across 9 lifecycle states. The next step should always be obvious."
+        action={
+          <Link href="/discover" data-testid="link-pipeline-discover" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
+            <Plus size={14} /> Add from Discover
+          </Link>
+        }
+      />
+      <div className="flex gap-4 overflow-x-auto pb-6">
+        {stageLabels.map(stage => {
+          const leads = columns[stage] ?? [];
+          return (
+            <section key={stage} className="min-w-[270px] max-w-[320px] flex-1 shrink-0 rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className={cx(
+                    'size-2 rounded-full',
+                    stage === 'won' ? 'bg-emerald-500' :
+                    stage === 'lost' ? 'bg-destructive' :
+                    stage === 'shortlisted' ? 'bg-amber-500' :
+                    stage === 'outreach_ready' ? 'bg-blue-500' :
+                    stage === 'contacted' ? 'bg-purple-500' :
+                    'bg-[hsl(var(--accent))]'
+                  )} />
+                  <h2 className="text-xs font-bold uppercase font-mono-radar tracking-wide">{stage.replace('_', ' ')}</h2>
+                </div>
+                <span className="font-mono-radar text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{leads.length}</span>
+              </div>
+              <div className="space-y-2.5">
+                {leads.length > 0 ? (
+                  leads.map(lead => (
+                    <div key={lead.id} className="border border-border bg-card p-3.5 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md" data-testid={`card-pipeline-${lead.id}`}>
+                      <Link href={`/leads/${lead.id}`} data-testid={`link-pipeline-lead-${lead.id}`} className="block">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-semibold truncate hover:text-[hsl(var(--primary))]">{lead.companyName}</h3>
+                          <ArrowUpRight size={13} className="shrink-0 text-muted-foreground" />
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground truncate">{lead.industry} · {lead.location}</p>
+                      </Link>
+                      <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2.5">
+                        <span className="text-[10px] font-mono-radar font-semibold text-[hsl(var(--primary))]">{lead.relevance}/100</span>
+                        <select
+                          value={stage}
+                          onChange={e => move(lead.id, e.target.value)}
+                          data-testid={`select-pipeline-stage-${lead.id}`}
+                          className="rounded border border-border/80 bg-background px-1.5 py-0.5 text-[10px] font-mono-radar font-medium capitalize outline-none cursor-pointer"
+                        >
+                          {stageLabels.map(s => (
+                            <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-[11px] text-muted-foreground font-mono-radar border border-dashed border-border/60 rounded">
+                    No leads in this stage
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </PageFrame>
+  );
 }
 
 function RadarsPage() {
-  const { toast } = useToast(); const qc = useQueryClient(); const radars = useListRadars(); const run = useRunRadar();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const radars = useListRadars();
+  const run = useRunRadar();
+  const updateRadar = useUpdateRadar();
   const { mode } = useExecutionMode();
+
+  const [tab, setTab] = useState<'active' | 'archived' | 'all'>('active');
+  const [editingRadar, setEditingRadar] = useState<Radar | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    target: '',
+    offer: '',
+    geography: '',
+    intent: '',
+    description: '',
+    criteria: '',
+  });
+
+  const startEdit = (radar: Radar) => {
+    setEditingRadar(radar);
+    setEditForm({
+      name: radar.name,
+      target: radar.target,
+      offer: radar.offer,
+      geography: radar.geography ?? '',
+      intent: radar.intent ?? '',
+      description: radar.description ?? '',
+      criteria: radar.criteria.join('\n'),
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editingRadar) return;
+    updateRadar.mutate({
+      radarId: editingRadar.id,
+      data: {
+        name: editForm.name,
+        target: editForm.target,
+        offer: editForm.offer,
+        geography: editForm.geography ? editForm.geography.trim() : undefined,
+        intent: editForm.intent ? editForm.intent.trim() : undefined,
+        description: editForm.description,
+        criteria: editForm.criteria.split('\n').map(s => s.trim()).filter(Boolean),
+      }
+    }, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListRadarsQueryKey() });
+        setEditingRadar(null);
+        toast({ title: 'Radar updated', description: 'Changes saved to profile.' });
+      },
+      onError: (err: any) => {
+        const detail = err?.response?.data?.error || err?.message || 'Could not update Radar';
+        toast({ title: 'Update failed', description: detail, variant: 'destructive' });
+      }
+    });
+  };
+
+  const toggleArchive = (radar: Radar) => {
+    const newStatus = radar.status === 'archived' ? 'active' : 'archived';
+    updateRadar.mutate({
+      radarId: radar.id,
+      data: { status: newStatus }
+    }, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListRadarsQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
+        toast({
+          title: newStatus === 'archived' ? 'Radar archived' : 'Radar restored',
+          description: newStatus === 'archived' ? 'Moved to archived tab.' : 'Radar is now active.',
+        });
+      },
+      onError: () => toast({ title: 'Could not change Radar status', variant: 'destructive' })
+    });
+  };
+
   const runRadar = (radar: Radar) => run.mutate({ radarId: radar.id, data: { mode } }, {
     onSuccess: result => {
       qc.invalidateQueries({ queryKey: getListRadarsQueryKey() });
@@ -1013,7 +1433,248 @@ function RadarsPage() {
       });
     }
   });
-  return <PageFrame><PageHeader eyebrow="Saved profiles" title="Your Radars." description="A Radar is a repeatable point of view. Keep it focused, run it when the market changes." action={<Link href="/create" data-testid="link-radars-create" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground"><Plus size={14} /> New Radar</Link>} />{radars.isLoading ? <LoadingRows count={3} /> : radars.isError ? <ErrorState onRetry={() => radars.refetch()} /> : radars.data?.length ? <div className="grid gap-4 md:grid-cols-2">{radars.data.map(radar => <article key={radar.id} className="group border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/.45)]" data-testid={`card-radar-${radar.id}`}><div className="flex items-start justify-between"><div className="grid size-10 place-items-center rounded-full bg-[hsl(var(--primary)/.1)] text-[hsl(var(--primary))]"><RadarIcon size={18} /></div><span className={cx('rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase', radar.status === 'active' ? 'bg-[hsl(var(--accent)/.2)]' : 'bg-muted text-muted-foreground')}>{radar.status}</span></div><h2 className="mt-6 font-display text-3xl">{radar.name}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{radar.description}</p><div className="mt-5 flex flex-wrap gap-1.5">{radar.criteria.slice(0, 3).map(c => <span key={c} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{c}</span>)}</div><div className="mt-7 flex items-center justify-between border-t border-border pt-4"><span className="text-xs text-muted-foreground"><strong className="text-foreground">{radar.leadCount}</strong> opportunities</span><button onClick={() => runRadar(radar)} disabled={run.isPending} data-testid={`button-run-radar-${radar.id}`} className="inline-flex items-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] hover:underline">{run.isPending ? 'Running…' : `Run in ${mode.toUpperCase()}`} <RefreshCw size={13} /></button></div></article>)}</div> : <EmptyState title="No saved Radars" detail="Build a point of view once, then run it whenever you need a fresh brief." href="/create" action="Create your first Radar" />}</PageFrame>;
+
+  const filteredRadars = useMemo(() => {
+    const list = radars.data ?? [];
+    if (tab === 'active') return list.filter(r => r.status !== 'archived');
+    if (tab === 'archived') return list.filter(r => r.status === 'archived');
+    return list;
+  }, [radars.data, tab]);
+
+  return (
+    <PageFrame>
+      <PageHeader
+        eyebrow="Saved profiles"
+        title="Your Radars."
+        description="A Radar is a repeatable point of view. Keep it focused, tune its target or geography, and run it when the market changes."
+        action={
+          <Link href="/create" data-testid="link-radars-create" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
+            <Plus size={14} /> New Radar
+          </Link>
+        }
+      />
+
+      {/* Tabs */}
+      <div className="mb-6 flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTab('active')}
+            data-testid="tab-radars-active"
+            className={cx(
+              'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+              tab === 'active' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Active ({(radars.data ?? []).filter(r => r.status !== 'archived').length})
+          </button>
+          <button
+            onClick={() => setTab('archived')}
+            data-testid="tab-radars-archived"
+            className={cx(
+              'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+              tab === 'archived' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Archived ({(radars.data ?? []).filter(r => r.status === 'archived').length})
+          </button>
+          <button
+            onClick={() => setTab('all')}
+            data-testid="tab-radars-all"
+            className={cx(
+              'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+              tab === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            All ({(radars.data ?? []).length})
+          </button>
+        </div>
+      </div>
+
+      {/* Inline Edit Form Modal/Panel */}
+      {editingRadar && (
+        <div className="mb-8 border border-[hsl(var(--primary)/.4)] bg-card p-6 shadow-md rise-in">
+          <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <Edit3 size={16} className="text-[hsl(var(--primary))]" />
+              <h2 className="text-sm font-semibold text-foreground">Edit Radar: {editingRadar.name}</h2>
+            </div>
+            <button
+              onClick={() => setEditingRadar(null)}
+              data-testid="button-cancel-radar-edit"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Radar Name" hint="Identifying title">
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  data-testid="input-edit-radar-name"
+                  className="radar-input"
+                />
+              </Field>
+              <Field label="Target Profile" hint="Who to search for">
+                <input
+                  value={editForm.target}
+                  onChange={e => setEditForm({ ...editForm, target: e.target.value })}
+                  data-testid="input-edit-radar-target"
+                  className="radar-input"
+                />
+              </Field>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Geography / Region" hint="e.g. India, United Kingdom, West Coast">
+                <input
+                  value={editForm.geography}
+                  onChange={e => setEditForm({ ...editForm, geography: e.target.value })}
+                  data-testid="input-edit-radar-geography"
+                  className="radar-input"
+                />
+              </Field>
+              <Field label="Search Intent & Focus" hint="e.g. DTC brands with active ecommerce store">
+                <input
+                  value={editForm.intent}
+                  onChange={e => setEditForm({ ...editForm, intent: e.target.value })}
+                  data-testid="input-edit-radar-intent"
+                  className="radar-input"
+                />
+              </Field>
+            </div>
+            <Field label="Your Offer" hint="What service or product you offer">
+              <textarea
+                value={editForm.offer}
+                onChange={e => setEditForm({ ...editForm, offer: e.target.value })}
+                data-testid="input-edit-radar-offer"
+                className="radar-input min-h-20 resize-y"
+              />
+            </Field>
+            <Field label="Criteria Signals" hint="One criterion per line">
+              <textarea
+                value={editForm.criteria}
+                onChange={e => setEditForm({ ...editForm, criteria: e.target.value })}
+                data-testid="input-edit-radar-criteria"
+                className="radar-input min-h-24 resize-y"
+              />
+            </Field>
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                onClick={() => setEditingRadar(null)}
+                className="rounded-md border border-border px-4 py-2 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={updateRadar.isPending}
+                data-testid="button-save-radar-edit"
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {updateRadar.isPending ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {radars.isLoading ? (
+        <LoadingRows count={3} />
+      ) : radars.isError ? (
+        <ErrorState onRetry={() => radars.refetch()} />
+      ) : filteredRadars.length ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredRadars.map(radar => (
+            <article
+              key={radar.id}
+              className="group border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/.45)]"
+              data-testid={`card-radar-${radar.id}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="grid size-10 place-items-center rounded-full bg-[hsl(var(--primary)/.1)] text-[hsl(var(--primary))]">
+                  <RadarIcon size={18} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cx(
+                    'rounded-full px-2 py-1 text-[10px] font-mono-radar uppercase font-bold',
+                    radar.status === 'active' ? 'bg-[hsl(var(--accent)/.2)]' :
+                    radar.status === 'archived' ? 'bg-muted text-muted-foreground' :
+                    'bg-amber-100 text-amber-800'
+                  )}>
+                    {radar.status}
+                  </span>
+                  <button
+                    onClick={() => startEdit(radar)}
+                    data-testid={`button-edit-radar-${radar.id}`}
+                    title="Edit Radar"
+                    className="grid size-8 place-items-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <Edit3 size={13} />
+                  </button>
+                  <button
+                    onClick={() => toggleArchive(radar)}
+                    data-testid={`button-archive-radar-${radar.id}`}
+                    title={radar.status === 'archived' ? 'Restore Radar' : 'Archive Radar'}
+                    className="grid size-8 place-items-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    {radar.status === 'archived' ? <ArchiveRestore size={13} /> : <Archive size={13} />}
+                  </button>
+                </div>
+              </div>
+
+              <h2 className="mt-5 font-display text-3xl">{radar.name}</h2>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{radar.description || radar.target}</p>
+
+              {(radar.geography || radar.intent) && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {radar.geography && (
+                    <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-0.5 text-[10px] font-mono-radar text-foreground border border-border/60">
+                      <Globe2 size={11} className="text-muted-foreground" /> {radar.geography}
+                    </span>
+                  )}
+                  {radar.intent && (
+                    <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-0.5 text-[10px] font-mono-radar text-foreground border border-border/60">
+                      <Target size={11} className="text-muted-foreground" /> {radar.intent}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {radar.criteria.slice(0, 3).map(c => (
+                  <span key={c} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">
+                    {c}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-7 flex items-center justify-between border-t border-border pt-4">
+                <span className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">{radar.leadCount}</strong> opportunities
+                </span>
+                <button
+                  onClick={() => runRadar(radar)}
+                  disabled={run.isPending || radar.status === 'archived'}
+                  data-testid={`button-run-radar-${radar.id}`}
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] hover:underline disabled:opacity-50"
+                >
+                  {run.isPending ? 'Running…' : `Run in ${mode.toUpperCase()}`} <RefreshCw size={13} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title={tab === 'archived' ? 'No archived Radars' : 'No saved Radars'}
+          detail={tab === 'archived' ? 'Radars you archive will appear here without being deleted.' : 'Build a point of view once, then run it whenever you need a fresh brief.'}
+          href={tab === 'archived' ? undefined : '/create'}
+          action={tab === 'archived' ? undefined : 'Create your first Radar'}
+        />
+      )}
+    </PageFrame>
+  );
 }
 
 function SettingsPage() {

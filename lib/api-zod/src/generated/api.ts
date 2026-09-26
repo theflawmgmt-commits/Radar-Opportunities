@@ -32,8 +32,10 @@ export const GetDashboardResponse = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string()),
-  "status": zod.enum(['active', 'paused']),
+  "status": zod.enum(['active', 'paused', 'archived']),
   "leadCount": zod.number().int()
 }),zod.null()]).optional()
 })
@@ -48,8 +50,10 @@ export const ListRadarsResponseItem = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string()),
-  "status": zod.enum(['active', 'paused']),
+  "status": zod.enum(['active', 'paused', 'archived']),
   "leadCount": zod.number().int()
 })
 export const ListRadarsResponse = zod.array(ListRadarsResponseItem)
@@ -66,6 +70,8 @@ export const CreateRadarBody = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string())
 })
 
@@ -75,8 +81,10 @@ export const CreateRadarResponse = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string()),
-  "status": zod.enum(['active', 'paused']),
+  "status": zod.enum(['active', 'paused', 'archived']),
   "leadCount": zod.number().int()
 })
 
@@ -94,8 +102,42 @@ export const GetRadarResponse = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string()),
-  "status": zod.enum(['active', 'paused']),
+  "status": zod.enum(['active', 'paused', 'archived']),
+  "leadCount": zod.number().int()
+})
+
+
+/**
+ * @summary Update or archive a saved Radar
+ */
+export const UpdateRadarParams = zod.object({
+  "radarId": zod.coerce.string()
+})
+
+export const UpdateRadarBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().optional(),
+  "target": zod.string().optional(),
+  "offer": zod.string().optional(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
+  "criteria": zod.array(zod.string()).optional(),
+  "status": zod.enum(['active', 'paused', 'archived']).optional()
+})
+
+export const UpdateRadarResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "target": zod.string(),
+  "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
+  "criteria": zod.array(zod.string()),
+  "status": zod.enum(['active', 'paused', 'archived']),
   "leadCount": zod.number().int()
 })
 
@@ -120,8 +162,10 @@ export const RunRadarResponse = zod.object({
   "description": zod.string(),
   "target": zod.string(),
   "offer": zod.string(),
+  "geography": zod.string().optional(),
+  "intent": zod.string().optional(),
   "criteria": zod.array(zod.string()),
-  "status": zod.enum(['active', 'paused']),
+  "status": zod.enum(['active', 'paused', 'archived']),
   "leadCount": zod.number().int()
 }),
   "stages": zod.array(zod.string()),
@@ -176,7 +220,7 @@ export const ListLeadsResponseItem = zod.object({
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
   "discoveredAt": zod.string(),
   "radarId": zod.string(),
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']),
   "saved": zod.boolean(),
   "contactVerified": zod.boolean().optional(),
   "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
@@ -383,7 +427,7 @@ export const GetLeadResponse = zod.object({
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
   "discoveredAt": zod.string(),
   "radarId": zod.string(),
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']),
   "saved": zod.boolean(),
   "contactVerified": zod.boolean().optional(),
   "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
@@ -556,7 +600,7 @@ export const UpdateLeadParams = zod.object({
 })
 
 export const UpdateLeadBody = zod.object({
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']).optional(),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']).optional(),
   "saved": zod.boolean().optional()
 })
 
@@ -594,7 +638,7 @@ export const UpdateLeadResponse = zod.object({
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
   "discoveredAt": zod.string(),
   "radarId": zod.string(),
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']),
   "saved": zod.boolean(),
   "contactVerified": zod.boolean().optional(),
   "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
@@ -784,7 +828,8 @@ export const CreateOutreachBody = zod.object({
   "leadId": zod.string(),
   "channel": zod.enum(['email', 'instagram', 'linkedin']),
   "tone": zod.enum(['human', 'casual', 'direct', 'professional']),
-  "offer": zod.string()
+  "offer": zod.string(),
+  "recipientScope": zod.enum(['person', 'company']).optional()
 })
 
 export const CreateOutreachResponse = zod.object({
@@ -866,7 +911,7 @@ export const GetPipelineResponse = zod.object({
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
   "discoveredAt": zod.string(),
   "radarId": zod.string(),
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']),
   "saved": zod.boolean(),
   "contactVerified": zod.boolean().optional(),
   "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),
@@ -1040,7 +1085,7 @@ export const UpdatePipelineStageParams = zod.object({
 })
 
 export const UpdatePipelineStageBody = zod.object({
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost'])
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived'])
 })
 
 export const updatePipelineStageResponseRelevanceMin = 0;
@@ -1077,7 +1122,7 @@ export const UpdatePipelineStageResponse = zod.object({
   "sourceStatus": zod.enum(['demo', 'connected', 'not_verified']),
   "discoveredAt": zod.string(),
   "radarId": zod.string(),
-  "status": zod.enum(['new', 'researched', 'ready', 'contacted', 'replied', 'interested', 'won', 'lost']),
+  "status": zod.enum(['discovered', 'review', 'shortlisted', 'outreach_ready', 'contacted', 'replied', 'won', 'lost', 'archived']),
   "saved": zod.boolean(),
   "contactVerified": zod.boolean().optional(),
   "fit": zod.enum(['HIGH RELEVANCE', 'POSSIBLE RELEVANCE', 'LOW RELEVANCE']).optional(),

@@ -1,3 +1,11 @@
+try {
+  if (typeof process.loadEnvFile === "function") {
+    process.loadEnvFile();
+  }
+} catch {
+  // .env file not found or already loaded
+}
+
 import app from "./app";
 import { logger } from "./lib/logger";
 

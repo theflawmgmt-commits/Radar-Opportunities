@@ -95,6 +95,27 @@ paths:
                 $ref: "#/components/schemas/Radar"
         "404":
           description: Radar not found
+    patch:
+      operationId: updateRadar
+      tags: [radars]
+      summary: Update or archive a saved Radar
+      parameters:
+        - $ref: "#/components/parameters/RadarId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RadarUpdate"
+      responses:
+        "200":
+          description: Updated Radar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Radar"
+        "404":
+          description: Radar not found
     post:
       operationId: runRadar
       tags: [radars]
@@ -321,10 +342,12 @@ components:
         description: { type: string }
         target: { type: string }
         offer: { type: string }
+        geography: { type: string }
+        intent: { type: string }
         criteria:
           type: array
           items: { type: string }
-        status: { type: string, enum: [active, paused] }
+        status: { type: string, enum: [active, paused, archived] }
         leadCount: { type: integer }
     RadarInput:
       type: object
@@ -334,9 +357,26 @@ components:
         description: { type: string }
         target: { type: string }
         offer: { type: string }
+        geography: { type: string }
+        intent: { type: string }
         criteria:
           type: array
           items: { type: string }
+    RadarUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        target: { type: string }
+        offer: { type: string }
+        geography: { type: string }
+        intent: { type: string }
+        criteria:
+          type: array
+          items: { type: string }
+        status:
+          type: string
+          enum: [active, paused, archived]
     RadarRunInput:
       type: object
       properties:
@@ -403,7 +443,7 @@ components:
         radarId: { type: string }
         status:
           type: string
-          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+          enum: [discovered, review, shortlisted, outreach_ready, contacted, replied, won, lost, archived]
         saved: { type: boolean }
         contactVerified: { type: boolean }
         fit:
@@ -604,7 +644,7 @@ components:
       properties:
         status:
           type: string
-          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+          enum: [discovered, review, shortlisted, outreach_ready, contacted, replied, won, lost, archived]
         saved: { type: boolean }
     Evidence:
       type: object
@@ -645,6 +685,9 @@ components:
         channel: { type: string, enum: [email, instagram, linkedin] }
         tone: { type: string, enum: [human, casual, direct, professional] }
         offer: { type: string }
+        recipientScope:
+          type: string
+          enum: [person, company]
     OutreachUpdate:
       type: object
       properties:
@@ -667,7 +710,7 @@ components:
       properties:
         status:
           type: string
-          enum: [new, researched, ready, contacted, replied, interested, won, lost]
+          enum: [discovered, review, shortlisted, outreach_ready, contacted, replied, won, lost, archived]
     Activity:
       type: object
       required: [id, type, title, detail, leadId, createdAt]

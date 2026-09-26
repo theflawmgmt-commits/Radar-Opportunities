@@ -10,12 +10,13 @@ export type PipelineUpdateStatus = typeof PipelineUpdateStatus[keyof typeof Pipe
 
 
 export const PipelineUpdateStatus = {
-  new: 'new',
-  researched: 'researched',
-  ready: 'ready',
+  discovered: 'discovered',
+  review: 'review',
+  shortlisted: 'shortlisted',
+  outreach_ready: 'outreach_ready',
   contacted: 'contacted',
   replied: 'replied',
-  interested: 'interested',
   won: 'won',
   lost: 'lost',
+  archived: 'archived',
 } as const;

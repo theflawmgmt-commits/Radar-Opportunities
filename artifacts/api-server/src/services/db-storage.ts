@@ -31,6 +31,8 @@ export async function saveLiveRadar(radar: Radar): Promise<Radar> {
           description: radar.description,
           target: radar.target,
           offer: radar.offer,
+          geography: radar.geography ?? null,
+          intent: radar.intent ?? null,
           criteria: radar.criteria,
           status: radar.status,
           leadCount: radar.leadCount,
@@ -42,6 +44,8 @@ export async function saveLiveRadar(radar: Radar): Promise<Radar> {
             description: radar.description,
             target: radar.target,
             offer: radar.offer,
+            geography: radar.geography ?? null,
+            intent: radar.intent ?? null,
             criteria: radar.criteria,
             status: radar.status,
             leadCount: radar.leadCount,
@@ -55,6 +59,95 @@ export async function saveLiveRadar(radar: Radar): Promise<Radar> {
 
   inMemoryLiveRadars.set(radar.id, radar);
   return radar;
+}
+
+export async function getLiveRadarById(radarId: string): Promise<Radar | null> {
+  if (isDbConnected()) {
+    try {
+      const database = getDb();
+      const rows = await database
+        .select()
+        .from(radarsTable)
+        .where(eq(radarsTable.id, radarId))
+        .limit(1);
+      if (rows[0]) {
+        const r = rows[0];
+        return {
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          target: r.target,
+          offer: r.offer,
+          geography: r.geography ?? undefined,
+          intent: r.intent ?? undefined,
+          criteria: r.criteria,
+          status: r.status as Radar["status"],
+          leadCount: r.leadCount,
+        };
+      }
+    } catch (err) {
+      logger.error({ err, radarId }, "Failed to fetch live radar from PostgreSQL");
+    }
+  }
+  return inMemoryLiveRadars.get(radarId) ?? null;
+}
+
+export async function getAllLiveRadars(): Promise<Radar[]> {
+  if (isDbConnected()) {
+    try {
+      const database = getDb();
+      const rows = await database.select().from(radarsTable);
+      return rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        target: r.target,
+        offer: r.offer,
+        geography: r.geography ?? undefined,
+        intent: r.intent ?? undefined,
+        criteria: r.criteria,
+        status: r.status as Radar["status"],
+        leadCount: r.leadCount,
+      }));
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch all live radars from PostgreSQL");
+    }
+  }
+  return Array.from(inMemoryLiveRadars.values());
+}
+
+export async function updateLiveRadar(
+  radarId: string,
+  updates: Partial<Radar>,
+): Promise<Radar | null> {
+  const existing = inMemoryLiveRadars.get(radarId);
+  if (existing) {
+    Object.assign(existing, updates);
+  }
+
+  if (isDbConnected()) {
+    try {
+      const database = getDb();
+      await database
+        .update(radarsTable)
+        .set({
+          ...(updates.name !== undefined && { name: updates.name }),
+          ...(updates.description !== undefined && { description: updates.description }),
+          ...(updates.target !== undefined && { target: updates.target }),
+          ...(updates.offer !== undefined && { offer: updates.offer }),
+          ...(updates.geography !== undefined && { geography: updates.geography }),
+          ...(updates.intent !== undefined && { intent: updates.intent }),
+          ...(updates.criteria !== undefined && { criteria: updates.criteria }),
+          ...(updates.status !== undefined && { status: updates.status }),
+          ...(updates.leadCount !== undefined && { leadCount: updates.leadCount }),
+        })
+        .where(eq(radarsTable.id, radarId));
+    } catch (err) {
+      logger.error({ err, radarId }, "Failed to update live radar in PostgreSQL");
+    }
+  }
+
+  return existing ?? (await getLiveRadarById(radarId));
 }
 
 export async function saveLiveLeads(leads: Lead[]): Promise<void> {

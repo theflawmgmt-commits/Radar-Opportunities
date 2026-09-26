@@ -8,6 +8,8 @@ export const radarsTable = pgTable("radars", {
   description: text("description").notNull(),
   target: text("target").notNull(),
   offer: text("offer").notNull(),
+  geography: text("geography"),
+  intent: text("intent"),
   criteria: jsonb("criteria").$type<string[]>().notNull(),
   status: text("status").notNull().default("active"),
   leadCount: integer("lead_count").notNull().default(0),

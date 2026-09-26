@@ -15,6 +15,7 @@ export type RadarStatus = typeof RadarStatus[keyof typeof RadarStatus];
 export const RadarStatus = {
   active: 'active',
   paused: 'paused',
+  archived: 'archived',
 } as const;
 
 export interface Radar {
@@ -23,6 +24,8 @@ export interface Radar {
   description: string;
   target: string;
   offer: string;
+  geography?: string;
+  intent?: string;
   criteria: string[];
   status: RadarStatus;
   leadCount: number;
@@ -34,7 +37,29 @@ export interface RadarInput {
   description: string;
   target: string;
   offer: string;
+  geography?: string;
+  intent?: string;
   criteria: string[];
+}
+
+export type RadarUpdateStatus = typeof RadarUpdateStatus[keyof typeof RadarUpdateStatus];
+
+
+export const RadarUpdateStatus = {
+  active: 'active',
+  paused: 'paused',
+  archived: 'archived',
+} as const;
+
+export interface RadarUpdate {
+  name?: string;
+  description?: string;
+  target?: string;
+  offer?: string;
+  geography?: string;
+  intent?: string;
+  criteria?: string[];
+  status?: RadarUpdateStatus;
 }
 
 export type RadarRunInputMode = typeof RadarRunInputMode[keyof typeof RadarRunInputMode];
@@ -89,14 +114,15 @@ export type LeadStatus = typeof LeadStatus[keyof typeof LeadStatus];
 
 
 export const LeadStatus = {
-  new: 'new',
-  researched: 'researched',
-  ready: 'ready',
+  discovered: 'discovered',
+  review: 'review',
+  shortlisted: 'shortlisted',
+  outreach_ready: 'outreach_ready',
   contacted: 'contacted',
   replied: 'replied',
-  interested: 'interested',
   won: 'won',
   lost: 'lost',
+  archived: 'archived',
 } as const;
 
 export type LeadFit = typeof LeadFit[keyof typeof LeadFit];
@@ -409,14 +435,15 @@ export type LeadUpdateStatus = typeof LeadUpdateStatus[keyof typeof LeadUpdateSt
 
 
 export const LeadUpdateStatus = {
-  new: 'new',
-  researched: 'researched',
-  ready: 'ready',
+  discovered: 'discovered',
+  review: 'review',
+  shortlisted: 'shortlisted',
+  outreach_ready: 'outreach_ready',
   contacted: 'contacted',
   replied: 'replied',
-  interested: 'interested',
   won: 'won',
   lost: 'lost',
+  archived: 'archived',
 } as const;
 
 export interface LeadUpdate {
@@ -474,11 +501,20 @@ export const OutreachInputTone = {
   professional: 'professional',
 } as const;
 
+export type OutreachInputRecipientScope = typeof OutreachInputRecipientScope[keyof typeof OutreachInputRecipientScope];
+
+
+export const OutreachInputRecipientScope = {
+  person: 'person',
+  company: 'company',
+} as const;
+
 export interface OutreachInput {
   leadId: string;
   channel: OutreachInputChannel;
   tone: OutreachInputTone;
   offer: string;
+  recipientScope?: OutreachInputRecipientScope;
 }
 
 export type OutreachUpdateStatus = typeof OutreachUpdateStatus[keyof typeof OutreachUpdateStatus];
@@ -506,14 +542,15 @@ export type PipelineUpdateStatus = typeof PipelineUpdateStatus[keyof typeof Pipe
 
 
 export const PipelineUpdateStatus = {
-  new: 'new',
-  researched: 'researched',
-  ready: 'ready',
+  discovered: 'discovered',
+  review: 'review',
+  shortlisted: 'shortlisted',
+  outreach_ready: 'outreach_ready',
   contacted: 'contacted',
   replied: 'replied',
-  interested: 'interested',
   won: 'won',
   lost: 'lost',
+  archived: 'archived',
 } as const;
 
 export interface PipelineUpdate {

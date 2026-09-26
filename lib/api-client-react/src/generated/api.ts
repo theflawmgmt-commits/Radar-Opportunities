@@ -35,6 +35,7 @@ import type {
   RadarInput,
   RadarRun,
   RadarRunInput,
+  RadarUpdate,
   RunRadar400
 } from './api.schemas';
 
@@ -461,6 +462,95 @@ export function useGetRadar<TData = Awaited<ReturnType<typeof getRadar>>, TError
 
 
 
+
+export const getUpdateRadarUrl = (radarId: string,) => {
+
+
+
+
+  return `/api/radars/${radarId}`
+}
+
+/**
+ * @summary Update or archive a saved Radar
+ */
+export const updateRadar = async (radarId: string,
+    radarUpdate: RadarUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Radar> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Radar>(getUpdateRadarUrl(radarId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(radarUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateRadarMutationKey = () => ['updateRadar'] as const;
+
+export const getUpdateRadarMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRadar>>, TError,UpdateRadarMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRadar>>, TError,UpdateRadarMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRadarMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRadar>>, UpdateRadarMutationVariables> = (props) => {
+          const {radarId,data} = props ?? {};
+
+          return  updateRadar(radarId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRadarMutationResult = NonNullable<Awaited<ReturnType<typeof updateRadar>>>
+    export type UpdateRadarMutationBody = BodyType<RadarUpdate>
+    export type UpdateRadarMutationError = ErrorType<void>
+    export type UpdateRadarMutationVariables = {radarId: string;data: BodyType<RadarUpdate>}
+
+    /**
+ * @summary Update or archive a saved Radar
+ */
+export const useUpdateRadar = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRadar>>, TError,UpdateRadarMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRadar>>,
+        TError,
+        UpdateRadarMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRadarMutationOptions(options));
+    }
 
 export const getRunRadarUrl = (radarId: string,) => {
 

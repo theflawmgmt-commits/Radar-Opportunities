@@ -12,5 +12,7 @@ export interface RadarInput {
   description: string;
   target: string;
   offer: string;
+  geography?: string;
+  intent?: string;
   criteria: string[];
 }

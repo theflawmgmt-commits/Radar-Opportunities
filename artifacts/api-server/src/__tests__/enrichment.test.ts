@@ -620,7 +620,7 @@ describe("Phase 2.3 RADAR Contact Enrichment — Unit Tests", () => {
       source: "Firecrawl Live Discovery",
       sourceStatus: "connected",
       discoveredAt: new Date().toISOString(),
-      status: "researched",
+      status: "discovered",
       saved: false,
       contactVerified: true,
       founder: "Liam Chen",

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type RadarStatus = typeof RadarStatus[keyof typeof RadarStatus];
+export type RadarUpdateStatus = typeof RadarUpdateStatus[keyof typeof RadarUpdateStatus];
 
 
-export const RadarStatus = {
+export const RadarUpdateStatus = {
   active: 'active',
   paused: 'paused',
   archived: 'archived',

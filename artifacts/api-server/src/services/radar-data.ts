@@ -14,6 +14,8 @@ const demoRadar: Radar = {
   description: "Brands that could benefit from creator-led product stories.",
   target: "Indian consumer brands",
   offer: "Short-form UGC videos",
+  geography: "India",
+  intent: "Ecommerce brands launching products with minimal video/creator content",
   criteria: ["Active social presence", "Recent launches", "Low creator-content presence"],
   status: "active",
   leadCount: 10,
@@ -43,7 +45,7 @@ const demoLead = (
   publicEmail: string | null,
   website: string | null,
   instagram: string | null,
-  status: Lead["status"] = "new",
+  status: Lead["status"] = "discovered",
 ): Lead => {
   const lead: Lead = {
     id,
@@ -86,7 +88,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/xyz-pet-foods",
     "https://instagram.com/xyzpetfoods",
-    "researched",
+    "review",
   ),
   demoLead(
     "lead-nestle-home",
@@ -101,7 +103,7 @@ export const leads: Lead[] = [
     "Not found",
     "https://example.com/nestle-home",
     "https://instagram.com/nestlehome.demo",
-    "ready",
+    "outreach_ready",
   ),
   demoLead(
     "lead-luma-skin",
@@ -116,6 +118,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/luma-skin",
     "https://instagram.com/lumaskin.demo",
+    "discovered",
   ),
   demoLead(
     "lead-monsoon-coffee",
@@ -130,6 +133,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/monsoon-coffee",
     "https://instagram.com/monsooncoffee.demo",
+    "discovered",
   ),
   demoLead(
     "lead-mitti-play",
@@ -144,6 +148,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/mitti-play",
     "https://instagram.com/mittiplay.demo",
+    "shortlisted",
   ),
   demoLead(
     "lead-arc-studio",
@@ -158,7 +163,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/arc-studio-objects",
     "https://instagram.com/arcstudioobjects.demo",
-    "ready",
+    "outreach_ready",
   ),
   demoLead(
     "lead-woven-days",
@@ -188,6 +193,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/brightpath-learning",
     "https://instagram.com/brightpath.demo",
+    "replied",
   ),
   demoLead(
     "lead-field-notes",
@@ -202,6 +208,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/field-notes-supply",
     "https://instagram.com/fieldnotessupply.demo",
+    "won",
   ),
   demoLead(
     "lead-terracotta-labs",
@@ -216,6 +223,7 @@ export const leads: Lead[] = [
     null,
     "https://example.com/terracotta-labs",
     "https://instagram.com/terracottalabs.demo",
+    "archived",
   ),
 ];
 
@@ -264,16 +272,28 @@ export const activity: Activity[] = [
 ];
 
 export const getDashboard = (): Dashboard => ({
-  newOpportunities: leads.filter((lead) => lead.status === "new").length,
-  needsAttention: leads.filter((lead) => ["ready", "contacted"].includes(lead.status)).length,
-  outreachReady: leads.filter((lead) => lead.status === "ready").length,
+  newOpportunities: leads.filter((lead) => lead.status === "discovered").length,
+  needsAttention: leads.filter((lead) => ["outreach_ready", "contacted"].includes(lead.status)).length,
+  outreachReady: leads.filter((lead) => lead.status === "outreach_ready").length,
   totalLeads: leads.length,
   demoMode: true,
   activeRadar: radars[0] ?? null,
 });
 
+export const PIPELINE_STAGES = [
+  "discovered",
+  "review",
+  "shortlisted",
+  "outreach_ready",
+  "contacted",
+  "replied",
+  "won",
+  "lost",
+  "archived",
+] as const;
+
 export const getPipeline = (): Pipeline => ({
-  columns: ["new", "researched", "ready", "contacted", "replied", "interested", "won", "lost"].reduce(
+  columns: PIPELINE_STAGES.reduce(
     (columns, status) => {
       columns[status] = leads.filter((lead) => lead.status === status);
       return columns;

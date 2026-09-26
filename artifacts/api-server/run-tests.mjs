@@ -16,6 +16,9 @@ async function runTests() {
       path.resolve(artifactDir, "src/__tests__/intelligence.test.ts"),
       path.resolve(artifactDir, "src/__tests__/enrichment.test.ts"),
       path.resolve(artifactDir, "src/__tests__/opportunity-brief.test.ts"),
+      path.resolve(artifactDir, "src/__tests__/discovery-reliability.test.ts"),
+      path.resolve(artifactDir, "src/__tests__/pipeline-workflow.test.ts"),
+      path.resolve(artifactDir, "src/__tests__/outreach-drafting.test.ts"),
     ],
     platform: "node",
     bundle: true,
@@ -46,6 +49,9 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     path.resolve(testOutDir, "intelligence.test.mjs"),
     path.resolve(testOutDir, "enrichment.test.mjs"),
     path.resolve(testOutDir, "opportunity-brief.test.mjs"),
+    path.resolve(testOutDir, "discovery-reliability.test.mjs"),
+    path.resolve(testOutDir, "pipeline-workflow.test.mjs"),
+    path.resolve(testOutDir, "outreach-drafting.test.mjs"),
   ];
   const child = spawn(process.execPath, ["--test", ...testFiles], {
     stdio: "inherit",

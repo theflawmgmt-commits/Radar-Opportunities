@@ -75,7 +75,7 @@ describe("Phase 2.4 RADAR Opportunity Brief — Comprehensive Verification", () 
     source: "Firecrawl Live Discovery",
     sourceStatus: "connected",
     discoveredAt: "2026-09-24T10:00:00Z",
-    status: "researched",
+    status: "discovered",
     saved: false,
     contactVerified: true,
     publicEmail: "sam@artisanalbrews.example.com",
@@ -230,7 +230,7 @@ describe("Phase 2.4 RADAR Opportunity Brief — Comprehensive Verification", () 
       source: "Manual",
       sourceStatus: "connected",
       discoveredAt: "2026-09-24T10:00:00Z",
-      status: "new",
+      status: "discovered",
       saved: false,
       contactVerified: false,
     };

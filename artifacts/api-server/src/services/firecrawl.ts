@@ -16,7 +16,18 @@ export class FirecrawlService implements SearchProvider, ResearchProvider {
   private client: FirecrawlApp | null = null;
   private apiKey: string | null = null;
 
+  private loadEnvIfAvailable(): void {
+    if (!process.env.FIRECRAWL_API_KEY && typeof process.loadEnvFile === "function") {
+      try {
+        process.loadEnvFile();
+      } catch {
+        // .env file not found or unreadable; fallback to environment variables
+      }
+    }
+  }
+
   constructor(config?: FirecrawlServiceConfig) {
+    this.loadEnvIfAvailable();
     this.apiKey = config?.apiKey || process.env.FIRECRAWL_API_KEY || null;
     if (this.apiKey) {
       this.client = new FirecrawlApp({
@@ -27,10 +38,12 @@ export class FirecrawlService implements SearchProvider, ResearchProvider {
   }
 
   isConfigured(): boolean {
-    return Boolean(this.apiKey && this.client);
+    this.loadEnvIfAvailable();
+    return Boolean(this.apiKey || process.env.FIRECRAWL_API_KEY);
   }
 
   private ensureClient(): FirecrawlApp {
+    this.loadEnvIfAvailable();
     // Re-check process.env if not initialized earlier
     if (!this.client) {
       const envKey = process.env.FIRECRAWL_API_KEY;
@@ -59,9 +72,22 @@ export class FirecrawlService implements SearchProvider, ResearchProvider {
     try {
       const response = await client.search(query, { limit });
 
-      const rawItems = Array.isArray(response)
-        ? response
-        : (response as { data?: unknown[] })?.data ?? [];
+      let rawItems: any[] = [];
+      if (Array.isArray(response)) {
+        rawItems = response;
+      } else if (response && typeof response === "object") {
+        if ("web" in response && Array.isArray((response as any).web)) {
+          rawItems = (response as any).web;
+        } else {
+          try {
+            if ("data" in response && Array.isArray((response as any).data)) {
+              rawItems = (response as any).data;
+            }
+          } catch {
+            rawItems = [];
+          }
+        }
+      }
 
       const candidates: CandidateCompany[] = [];
       const discoveredAt = new Date().toISOString();

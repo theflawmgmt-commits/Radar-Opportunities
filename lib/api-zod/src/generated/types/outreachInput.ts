@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OutreachInputChannel } from './outreachInputChannel';
+import type { OutreachInputRecipientScope } from './outreachInputRecipientScope';
 import type { OutreachInputTone } from './outreachInputTone';
 
 export interface OutreachInput {
@@ -13,4 +14,5 @@ export interface OutreachInput {
   channel: OutreachInputChannel;
   tone: OutreachInputTone;
   offer: string;
+  recipientScope?: OutreachInputRecipientScope;
 }
